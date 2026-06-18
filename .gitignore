@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+!.env.example
+npm-debug.log*
+.next-dev.*.log
+*.log
+.playwright-cli/
+.DS_Store

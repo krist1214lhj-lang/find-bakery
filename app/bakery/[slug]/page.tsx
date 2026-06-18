@@ -1,0 +1,167 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { SaveButton } from "@/components/save-button";
+import { VerificationBadge } from "@/components/verification-badge";
+import { getBakeryBySlug } from "@/lib/bakeries";
+import { formatCheckedDate, getOperatingStatus } from "@/lib/verification";
+
+type BakeryDetailPageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function generateMetadata({
+  params,
+}: BakeryDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const bakery = getBakeryBySlug(slug);
+
+  return {
+    title: bakery?.name ?? "빵집을 찾을 수 없음",
+    description: bakery
+      ? `${bakery.region} ${bakery.name}의 영업 정보와 대표 메뉴`
+      : undefined,
+  };
+}
+
+export default async function BakeryDetailPage({
+  params,
+}: BakeryDetailPageProps) {
+  const { slug } = await params;
+  const bakery = getBakeryBySlug(slug);
+
+  if (!bakery) {
+    notFound();
+  }
+
+  const operatingStatus = getOperatingStatus(bakery);
+
+  return (
+    <article className="detail-page">
+      <div
+        className={`detail-hero tone-${bakery.imageTone}`}
+        role="img"
+        aria-label={`${bakery.name} 대표 이미지 자리`}
+      >
+        <span>{bakery.heroEmoji}</span>
+        <div className="detail-hero-label">대표 이미지 준비 중</div>
+      </div>
+
+      <div className="detail-content">
+        <Link className="back-link" href="/explore">
+          ← 탐색으로 돌아가기
+        </Link>
+        <div className="detail-title-row">
+          <div>
+            <span className="eyebrow">{bakery.region}</span>
+            <h1>{bakery.name}</h1>
+            <p>{bakery.roadAddress}</p>
+          </div>
+          <SaveButton bakeryId={bakery.id} bakeryName={bakery.name} />
+        </div>
+
+        <div className="status-line">
+          <strong>{operatingStatus.label}</strong>
+          <span>{operatingStatus.description}</span>
+        </div>
+
+        <section className="verification-panel" aria-labelledby="verify-title">
+          <div>
+            <span className="eyebrow">VERIFIED INFO</span>
+            <h2 id="verify-title">핵심 방문 정보 확인 기록</h2>
+          </div>
+          <VerificationBadge
+            checkedAt={bakery.verification.checkedAt}
+            grade={bakery.verification.grade}
+            sourceLabel={bakery.verification.sourceLabel}
+          />
+          <p>
+            {formatCheckedDate(bakery.verification.checkedAt)}에{" "}
+            {bakery.verification.sourceLabel}에서 영업 정보를 확인했어요.
+          </p>
+          <a
+            href={bakery.verification.sourceUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            공식 원문 보기 ↗
+          </a>
+        </section>
+
+        <div className="action-grid">
+          <a
+            href={`https://map.kakao.com/link/to/${encodeURIComponent(
+              bakery.name,
+            )},${bakery.latitude},${bakery.longitude}`}
+            rel="noreferrer"
+            target="_blank"
+          >
+            길찾기
+          </a>
+          <a href={`tel:${bakery.phone.replaceAll("-", "")}`}>전화</a>
+          <SaveButton
+            bakeryId={bakery.id}
+            bakeryName={bakery.name}
+            variant="action"
+          />
+        </div>
+
+        <section className="detail-section">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">SIGNATURE</span>
+              <h2>꼭 먹어볼 빵</h2>
+            </div>
+          </div>
+          <div className="menu-grid">
+            {bakery.menus.map((menu) => (
+              <div className="menu-card" key={menu.id}>
+                <span aria-hidden="true">{menu.emoji}</span>
+                <h3>{menu.name}</h3>
+                <strong>{menu.price.toLocaleString("ko-KR")}원</strong>
+                <small>{formatCheckedDate(menu.checkedAt)} 가격 확인</small>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="detail-section info-grid">
+          <div>
+            <span className="eyebrow">TODAY</span>
+            <h2>오늘의 영업 정보</h2>
+            <p className="large-copy">{operatingStatus.hoursLabel}</p>
+            <p>
+              {operatingStatus.notice
+                ? operatingStatus.notice
+                : bakery.scheduleNote}
+            </p>
+          </div>
+          <div>
+            <span className="eyebrow">FACILITIES</span>
+            <h2>편의 정보</h2>
+            <ul className="plain-list">
+              {bakery.facilities.map((facility) => (
+                <li key={facility}>{facility}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="detail-section fame-panel">
+          <span className="eyebrow">WHY FAMOUS</span>
+          <h2>이곳이 알려진 이유</h2>
+          <p>{bakery.fameReason}</p>
+          <small>편집 근거: {bakery.fameSource}</small>
+        </section>
+
+        <section className="correction-panel">
+          <div>
+            <h2>정보가 실제와 다른가요?</h2>
+            <p>영업시간, 폐점, 메뉴 가격의 변경을 알려주세요.</p>
+          </div>
+          <Link href={`/bakery/${bakery.slug}/report`}>수정 제보</Link>
+        </section>
+      </div>
+    </article>
+  );
+}
