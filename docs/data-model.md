@@ -40,98 +40,101 @@ CorrectionReport 1 ── N ReviewAction
 
 브랜드 또는 독립 빵집의 정체성이다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 내부 식별자 |
-| `name` | text | O | 공식 브랜드명 |
-| `slug` | text | O | URL용 고유 값 |
-| `description` | text | X | 출처가 있는 소개 |
-| `foundedYear` | integer | X | 설립 연도 |
-| `officialWebsiteUrl` | URL | X | 공식 웹사이트 |
-| `status` | enum | O | `active`, `inactive` |
-| `createdAt` | timestamptz | O | 생성 시각 |
-| `updatedAt` | timestamptz | O | 수정 시각 |
+| 필드                 | 타입        | 필수 | 설명                 |
+| -------------------- | ----------- | ---: | -------------------- |
+| `id`                 | UUID        |    O | 내부 식별자          |
+| `name`               | text        |    O | 공식 브랜드명        |
+| `slug`               | text        |    O | URL용 고유 값        |
+| `description`        | text        |    X | 출처가 있는 소개     |
+| `foundedYear`        | integer     |    X | 설립 연도            |
+| `officialWebsiteUrl` | URL         |    X | 공식 웹사이트        |
+| `status`             | enum        |    O | `active`, `inactive` |
+| `createdAt`          | timestamptz |    O | 생성 시각            |
+| `updatedAt`          | timestamptz |    O | 수정 시각            |
 
 ### BakeryLocation
 
 사용자가 실제 방문하는 지점이다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 내부 식별자 |
-| `brandId` | UUID | O | 브랜드 |
-| `name` | text | O | 지점 표시명 |
-| `slug` | text | O | URL용 고유 값 |
-| `status` | enum | O | `draft`, `active`, `temporary_closed`, `closed`, `relocated`, `verification_needed` |
-| `roadAddress` | text | O | 도로명 주소 |
-| `lotAddress` | text | X | 지번 주소 |
-| `latitude` | decimal | O | WGS84 위도 |
-| `longitude` | decimal | O | WGS84 경도 |
-| `regionLevel1` | text | O | 시·도 |
-| `regionLevel2` | text | O | 시·군·구 |
-| `regionLevel3` | text | X | 읍·면·동 |
-| `phone` | text | X | 전화번호 |
-| `timezone` | text | O | 기본 `Asia/Seoul` |
-| `parking` | enum | O | `yes`, `no`, `limited`, `unknown` |
-| `seating` | enum | O | `yes`, `no`, `limited`, `unknown` |
-| `takeout` | enum | O | `yes`, `no`, `unknown` |
-| `shipping` | enum | O | `yes`, `no`, `unknown` |
-| `publishedAt` | timestamptz | X | 공개 시각 |
-| `createdAt` | timestamptz | O | 생성 시각 |
-| `updatedAt` | timestamptz | O | 수정 시각 |
+| 필드            | 타입        | 필수 | 설명                                                                                |
+| --------------- | ----------- | ---: | ----------------------------------------------------------------------------------- |
+| `id`            | UUID        |    O | 내부 식별자                                                                         |
+| `brandId`       | UUID        |    O | 브랜드                                                                              |
+| `name`          | text        |    O | 지점 표시명                                                                         |
+| `searchAliases` | text[]      |    O | 외국어 공식명을 한글로 찾기 위한 검수된 별칭과 띄어쓰기 변형                        |
+| `slug`          | text        |    O | URL용 고유 값                                                                       |
+| `status`        | enum        |    O | `draft`, `active`, `temporary_closed`, `closed`, `relocated`, `verification_needed` |
+| `roadAddress`   | text        |    O | 도로명 주소                                                                         |
+| `lotAddress`    | text        |    X | 지번 주소                                                                           |
+| `latitude`      | decimal     |    O | WGS84 위도                                                                          |
+| `longitude`     | decimal     |    O | WGS84 경도                                                                          |
+| `regionLevel1`  | text        |    O | 시·도                                                                               |
+| `regionLevel2`  | text        |    O | 시·군·구                                                                            |
+| `regionLevel3`  | text        |    X | 읍·면·동                                                                            |
+| `phone`         | text        |    X | 전화번호                                                                            |
+| `timezone`      | text        |    O | 기본 `Asia/Seoul`                                                                   |
+| `parking`       | enum        |    O | `yes`, `no`, `limited`, `unknown`                                                   |
+| `seating`       | enum        |    O | `yes`, `no`, `limited`, `unknown`                                                   |
+| `takeout`       | enum        |    O | `yes`, `no`, `unknown`                                                              |
+| `shipping`      | enum        |    O | `yes`, `no`, `unknown`                                                              |
+| `publishedAt`   | timestamptz |    X | 공개 시각                                                                           |
+| `createdAt`     | timestamptz |    O | 생성 시각                                                                           |
+| `updatedAt`     | timestamptz |    O | 수정 시각                                                                           |
 
 주소·좌표·전화번호 같은 값은 현재 조회 성능을 위해 지점에 보관하되, 각 값의 신뢰 근거는 `VerificationRecord`에서 추적한다.
+
+외국어 상호의 한글 검색은 자동 번역이나 임의 음역에 의존하지 않고 `searchAliases`에 검수된 한글 표기, 공식 영문명, 통용 표기를 저장한다. 검색 시 대소문자·공백·일반 기호 차이는 정규화하되 서로 다른 브랜드를 자동 병합하지 않는다.
 
 ### BusinessHour
 
 반복되는 기본 영업시간이다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `locationId` | UUID | O | 지점 |
-| `dayOfWeek` | integer | O | 1(월)~7(일) |
-| `sequence` | integer | O | 하루 복수 영업 구간 순서 |
-| `opensAt` | time | X | 휴무면 null |
-| `closesAt` | time | X | 휴무면 null |
-| `isClosed` | boolean | O | 정기휴무 여부 |
-| `validFrom` | date | X | 적용 시작 |
-| `validUntil` | date | X | 적용 종료 |
+| 필드         | 타입    | 필수 | 설명                     |
+| ------------ | ------- | ---: | ------------------------ |
+| `id`         | UUID    |    O | 식별자                   |
+| `locationId` | UUID    |    O | 지점                     |
+| `dayOfWeek`  | integer |    O | 1(월)~7(일)              |
+| `sequence`   | integer |    O | 하루 복수 영업 구간 순서 |
+| `opensAt`    | time    |    X | 휴무면 null              |
+| `closesAt`   | time    |    X | 휴무면 null              |
+| `isClosed`   | boolean |    O | 정기휴무 여부            |
+| `validFrom`  | date    |    X | 적용 시작                |
+| `validUntil` | date    |    X | 적용 종료                |
 
 ### SpecialSchedule
 
 임시휴무, 특별영업, 행사 시간 변경을 저장한다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `locationId` | UUID | O | 지점 |
-| `type` | enum | O | `temporary_closed`, `special_open`, `changed_hours`, `event` |
-| `startsAt` | timestamptz | O | 시작 |
-| `endsAt` | timestamptz | O | 종료 |
-| `opensAt` | time | X | 변경 영업 시작 |
-| `closesAt` | time | X | 변경 영업 종료 |
-| `note` | text | X | 사용자 표시 설명 |
-| `sourceId` | UUID | O | 근거 출처 |
-| `status` | enum | O | `draft`, `confirmed`, `expired`, `cancelled` |
+| 필드         | 타입        | 필수 | 설명                                                         |
+| ------------ | ----------- | ---: | ------------------------------------------------------------ |
+| `id`         | UUID        |    O | 식별자                                                       |
+| `locationId` | UUID        |    O | 지점                                                         |
+| `type`       | enum        |    O | `temporary_closed`, `special_open`, `changed_hours`, `event` |
+| `startsAt`   | timestamptz |    O | 시작                                                         |
+| `endsAt`     | timestamptz |    O | 종료                                                         |
+| `opensAt`    | time        |    X | 변경 영업 시작                                               |
+| `closesAt`   | time        |    X | 변경 영업 종료                                               |
+| `note`       | text        |    X | 사용자 표시 설명                                             |
+| `sourceId`   | UUID        |    O | 근거 출처                                                    |
+| `status`     | enum        |    O | `draft`, `confirmed`, `expired`, `cancelled`                 |
 
 ### MenuItem
 
 지점에서 판매하는 메뉴다. 같은 브랜드여도 지점별 판매 여부가 다를 수 있어 지점에 귀속한다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `locationId` | UUID | O | 지점 |
-| `name` | text | O | 메뉴명 |
-| `description` | text | X | 설명 |
-| `price` | integer | X | 원 단위 가격 |
-| `priceNote` | text | X | 변동·옵션 설명 |
-| `isSignature` | boolean | O | 대표 메뉴 여부 |
-| `availability` | enum | O | `regular`, `seasonal`, `limited`, `unknown`, `discontinued` |
-| `imageId` | UUID | X | 대표 이미지 |
-| `checkedAt` | timestamptz | X | 가격·판매 확인 시각 |
-| `status` | enum | O | `active`, `hidden`, `discontinued` |
+| 필드           | 타입        | 필수 | 설명                                                        |
+| -------------- | ----------- | ---: | ----------------------------------------------------------- |
+| `id`           | UUID        |    O | 식별자                                                      |
+| `locationId`   | UUID        |    O | 지점                                                        |
+| `name`         | text        |    O | 메뉴명                                                      |
+| `description`  | text        |    X | 설명                                                        |
+| `price`        | integer     |    X | 원 단위 가격                                                |
+| `priceNote`    | text        |    X | 변동·옵션 설명                                              |
+| `isSignature`  | boolean     |    O | 대표 메뉴 여부                                              |
+| `availability` | enum        |    O | `regular`, `seasonal`, `limited`, `unknown`, `discontinued` |
+| `imageId`      | UUID        |    X | 대표 이미지                                                 |
+| `checkedAt`    | timestamptz |    X | 가격·판매 확인 시각                                         |
+| `status`       | enum        |    O | `active`, `hidden`, `discontinued`                          |
 
 ### BreadCategory
 
@@ -155,18 +158,18 @@ CorrectionReport 1 ── N ReviewAction
 
 공식 홈페이지와 SNS 계정을 관리한다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `locationId` | UUID | X | 지점 계정 |
-| `brandId` | UUID | X | 브랜드 계정 |
-| `platform` | enum | O | `website`, `instagram`, `naver_blog`, `naver_place`, `kakao_channel`, `youtube`, `other` |
-| `url` | URL | O | 계정 주소 |
-| `handle` | text | X | 계정명 |
-| `officiality` | enum | O | `official`, `semi_official`, `user_generated`, `unknown` |
-| `officialityEvidence` | text | X | 공식성 판단 근거 |
-| `verifiedAt` | timestamptz | X | 공식성 확인 시각 |
-| `status` | enum | O | `active`, `unavailable`, `private`, `deleted` |
+| 필드                  | 타입        | 필수 | 설명                                                                                     |
+| --------------------- | ----------- | ---: | ---------------------------------------------------------------------------------------- |
+| `id`                  | UUID        |    O | 식별자                                                                                   |
+| `locationId`          | UUID        |    X | 지점 계정                                                                                |
+| `brandId`             | UUID        |    X | 브랜드 계정                                                                              |
+| `platform`            | enum        |    O | `website`, `instagram`, `naver_blog`, `naver_place`, `kakao_channel`, `youtube`, `other` |
+| `url`                 | URL         |    O | 계정 주소                                                                                |
+| `handle`              | text        |    X | 계정명                                                                                   |
+| `officiality`         | enum        |    O | `official`, `semi_official`, `user_generated`, `unknown`                                 |
+| `officialityEvidence` | text        |    X | 공식성 판단 근거                                                                         |
+| `verifiedAt`          | timestamptz |    X | 공식성 확인 시각                                                                         |
+| `status`              | enum        |    O | `active`, `unavailable`, `private`, `deleted`                                            |
 
 `brandId`와 `locationId` 중 정확히 하나 이상은 존재해야 한다. 지점별 계정이 없고 브랜드 계정만 있는 경우 게시물의 대상 지점을 별도로 확인한다.
 
@@ -174,39 +177,39 @@ CorrectionReport 1 ── N ReviewAction
 
 정보의 원문 또는 확인 행위다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `type` | enum | O | `official_site`, `official_sns`, `phone`, `map_api`, `public_data`, `tourism_data`, `media`, `user_report`, `onsite`, `other` |
-| `url` | URL | X | 원문 주소 |
-| `externalAccountId` | UUID | X | SNS 계정 |
-| `publisher` | text | X | 발행 주체 |
-| `publishedAt` | timestamptz | X | 게시 시각 |
-| `effectiveFrom` | timestamptz | X | 실제 적용 시작 |
-| `effectiveUntil` | timestamptz | X | 실제 적용 종료 |
-| `retrievedAt` | timestamptz | O | 확인 시각 |
-| `snapshotRef` | text | X | 허용 범위 내 보존 참조 |
-| `status` | enum | O | `accessible`, `unavailable`, `deleted`, `private` |
+| 필드                | 타입        | 필수 | 설명                                                                                                                          |
+| ------------------- | ----------- | ---: | ----------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | UUID        |    O | 식별자                                                                                                                        |
+| `type`              | enum        |    O | `official_site`, `official_sns`, `phone`, `map_api`, `public_data`, `tourism_data`, `media`, `user_report`, `onsite`, `other` |
+| `url`               | URL         |    X | 원문 주소                                                                                                                     |
+| `externalAccountId` | UUID        |    X | SNS 계정                                                                                                                      |
+| `publisher`         | text        |    X | 발행 주체                                                                                                                     |
+| `publishedAt`       | timestamptz |    X | 게시 시각                                                                                                                     |
+| `effectiveFrom`     | timestamptz |    X | 실제 적용 시작                                                                                                                |
+| `effectiveUntil`    | timestamptz |    X | 실제 적용 종료                                                                                                                |
+| `retrievedAt`       | timestamptz |    O | 확인 시각                                                                                                                     |
+| `snapshotRef`       | text        |    X | 허용 범위 내 보존 참조                                                                                                        |
+| `status`            | enum        |    O | `accessible`, `unavailable`, `deleted`, `private`                                                                             |
 
 ### VerificationRecord
 
 특정 항목의 값이 어떤 출처로 검증되었는지 기록한다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `locationId` | UUID | O | 지점 |
-| `menuItemId` | UUID | X | 메뉴 항목 검증 시 |
-| `field` | enum | O | `address`, `coordinates`, `phone`, `business_hours`, `closure`, `menu`, `price`, `facility`, `official_account`, `fame` |
-| `normalizedValue` | jsonb | O | 비교 가능한 정규화 값 |
-| `sourceId` | UUID | O | 근거 출처 |
-| `sourceAuthority` | enum | O | `official`, `authoritative`, `secondary`, `community` |
-| `result` | enum | O | `confirmed`, `supports`, `conflicts`, `superseded`, `rejected` |
-| `grade` | enum | O | `A`, `B`, `C`, `D` |
-| `verifiedBy` | UUID | X | 운영자 또는 시스템 |
-| `verifiedAt` | timestamptz | O | 검증 시각 |
-| `nextReviewAt` | timestamptz | O | 다음 검토 기한 |
-| `note` | text | X | 판단 메모 |
+| 필드              | 타입        | 필수 | 설명                                                                                                                    |
+| ----------------- | ----------- | ---: | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`              | UUID        |    O | 식별자                                                                                                                  |
+| `locationId`      | UUID        |    O | 지점                                                                                                                    |
+| `menuItemId`      | UUID        |    X | 메뉴 항목 검증 시                                                                                                       |
+| `field`           | enum        |    O | `address`, `coordinates`, `phone`, `business_hours`, `closure`, `menu`, `price`, `facility`, `official_account`, `fame` |
+| `normalizedValue` | jsonb       |    O | 비교 가능한 정규화 값                                                                                                   |
+| `sourceId`        | UUID        |    O | 근거 출처                                                                                                               |
+| `sourceAuthority` | enum        |    O | `official`, `authoritative`, `secondary`, `community`                                                                   |
+| `result`          | enum        |    O | `confirmed`, `supports`, `conflicts`, `superseded`, `rejected`                                                          |
+| `grade`           | enum        |    O | `A`, `B`, `C`, `D`                                                                                                      |
+| `verifiedBy`      | UUID        |    X | 운영자 또는 시스템                                                                                                      |
+| `verifiedAt`      | timestamptz |    O | 검증 시각                                                                                                               |
+| `nextReviewAt`    | timestamptz |    O | 다음 검토 기한                                                                                                          |
+| `note`            | text        |    X | 판단 메모                                                                                                               |
 
 등급은 저장하되 원천 속성으로부터 다시 계산할 수 있어야 한다. 계산 규칙 변경 시 과거 기록을 재평가할 수 있게 규칙 버전을 추가할 수 있다.
 
@@ -214,43 +217,43 @@ CorrectionReport 1 ── N ReviewAction
 
 ‘유명한 이유’를 설명하는 근거다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `locationId` | UUID | O | 지점 |
-| `type` | enum | O | `award`, `media`, `heritage`, `local_landmark`, `specialty`, `editorial`, `save_count` |
-| `title` | text | O | 화면 표시 제목 |
-| `description` | text | X | 설명 |
-| `sourceId` | UUID | X | 근거 |
-| `occurredAt` | date | X | 수상·방송 등 날짜 |
-| `status` | enum | O | `active`, `expired`, `disputed` |
+| 필드          | 타입 | 필수 | 설명                                                                                   |
+| ------------- | ---- | ---: | -------------------------------------------------------------------------------------- |
+| `id`          | UUID |    O | 식별자                                                                                 |
+| `locationId`  | UUID |    O | 지점                                                                                   |
+| `type`        | enum |    O | `award`, `media`, `heritage`, `local_landmark`, `specialty`, `editorial`, `save_count` |
+| `title`       | text |    O | 화면 표시 제목                                                                         |
+| `description` | text |    X | 설명                                                                                   |
+| `sourceId`    | UUID |    X | 근거                                                                                   |
+| `occurredAt`  | date |    X | 수상·방송 등 날짜                                                                      |
+| `status`      | enum |    O | `active`, `expired`, `disputed`                                                        |
 
 광고·협찬이면 별도의 상업적 표시를 강제한다.
 
 ### SavedBakery
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `userId` | UUID | O | 사용자 |
-| `locationId` | UUID | O | 지점 |
-| `createdAt` | timestamptz | O | 저장 시각 |
+| 필드         | 타입        | 필수 | 설명      |
+| ------------ | ----------- | ---: | --------- |
+| `userId`     | UUID        |    O | 사용자    |
+| `locationId` | UUID        |    O | 지점      |
+| `createdAt`  | timestamptz |    O | 저장 시각 |
 
 `userId + locationId`는 고유하다. 비로그인 저장은 로컬 저장소에서 같은 구조로 관리하고 로그인 시 명시적 동의를 받아 병합한다.
 
 ### CorrectionReport
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `locationId` | UUID | O | 대상 지점 |
-| `reporterId` | UUID | X | 익명 가능 |
-| `category` | enum | O | `hours`, `closure`, `relocation`, `menu_price`, `phone_address`, `other` |
-| `proposedValue` | jsonb | X | 제안 값 |
-| `description` | text | O | 제보 설명 |
-| `sourceUrl` | URL | X | 선택적 근거 |
-| `status` | enum | O | `submitted`, `triaged`, `in_review`, `accepted`, `rejected`, `duplicate` |
-| `createdAt` | timestamptz | O | 제출 시각 |
-| `resolvedAt` | timestamptz | X | 처리 시각 |
+| 필드            | 타입        | 필수 | 설명                                                                     |
+| --------------- | ----------- | ---: | ------------------------------------------------------------------------ |
+| `id`            | UUID        |    O | 식별자                                                                   |
+| `locationId`    | UUID        |    O | 대상 지점                                                                |
+| `reporterId`    | UUID        |    X | 익명 가능                                                                |
+| `category`      | enum        |    O | `hours`, `closure`, `relocation`, `menu_price`, `phone_address`, `other` |
+| `proposedValue` | jsonb       |    X | 제안 값                                                                  |
+| `description`   | text        |    O | 제보 설명                                                                |
+| `sourceUrl`     | URL         |    X | 선택적 근거                                                              |
+| `status`        | enum        |    O | `submitted`, `triaged`, `in_review`, `accepted`, `rejected`, `duplicate` |
+| `createdAt`     | timestamptz |    O | 제출 시각                                                                |
+| `resolvedAt`    | timestamptz |    X | 처리 시각                                                                |
 
 제보에는 개인 연락처나 민감정보를 입력하지 않도록 안내하고 자유 입력은 운영자만 열람한다.
 
@@ -258,14 +261,14 @@ CorrectionReport 1 ── N ReviewAction
 
 관리자 검수 이력이다.
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---:|---|
-| `id` | UUID | O | 식별자 |
-| `reportId` | UUID | O | 제보 |
-| `reviewerId` | UUID | O | 검수자 |
-| `action` | enum | O | `triage`, `approve`, `reject`, `hold`, `mark_duplicate`, `request_more_info` |
-| `reason` | text | O | 판단 근거 |
-| `createdAt` | timestamptz | O | 처리 시각 |
+| 필드         | 타입        | 필수 | 설명                                                                         |
+| ------------ | ----------- | ---: | ---------------------------------------------------------------------------- |
+| `id`         | UUID        |    O | 식별자                                                                       |
+| `reportId`   | UUID        |    O | 제보                                                                         |
+| `reviewerId` | UUID        |    O | 검수자                                                                       |
+| `action`     | enum        |    O | `triage`, `approve`, `reject`, `hold`, `mark_duplicate`, `request_more_info` |
+| `reason`     | text        |    O | 판단 근거                                                                    |
+| `createdAt`  | timestamptz |    O | 처리 시각                                                                    |
 
 ## 4. 검증 등급 계산 초안
 
@@ -298,14 +301,14 @@ CorrectionReport 1 ── N ReviewAction
 
 정보 항목의 민감도에 따라 재검토 주기를 다르게 둔다.
 
-| 항목 | 기본 재검토 |
-|---|---:|
-| 임시 일정 | 적용 기간 전·중 즉시 |
-| 영업시간·휴무 | 30일 |
-| 메뉴·가격 | 90일 |
-| 전화·편의 정보 | 90일 |
-| 주소·좌표 | 180일 |
-| 유명세 근거 | 365일 또는 만료일 |
+| 항목           |          기본 재검토 |
+| -------------- | -------------------: |
+| 임시 일정      | 적용 기간 전·중 즉시 |
+| 영업시간·휴무  |                 30일 |
+| 메뉴·가격      |                 90일 |
+| 전화·편의 정보 |                 90일 |
+| 주소·좌표      |                180일 |
+| 유명세 근거    |    365일 또는 만료일 |
 
 ## 5. 영업 상태 계산
 

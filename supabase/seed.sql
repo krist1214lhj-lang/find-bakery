@@ -25,6 +25,7 @@ insert into public.bakery_locations (
   brand_id,
   seed_key,
   name,
+  search_aliases,
   slug,
   status,
   road_address,
@@ -45,6 +46,7 @@ values
     '10000000-0000-4000-8000-000000000001',
     'bakery-seoul-001',
     '멜로우 오븐 성수점',
+    array['MELLOW OVEN', '멜로우오븐', '멜로우 오븐 성수', '멜로우오븐 성수점'],
     'mellow-oven-seongsu',
     'active',
     '서울 성동구 연무장길 00',
@@ -64,6 +66,7 @@ values
     '10000000-0000-4000-8000-000000000002',
     'bakery-daejeon-001',
     '오래뜰 제과',
+    array['OLD TOWN BAKERY', '올드 타운 베이커리', '올드타운베이커리'],
     'old-town-bakery-daejeon',
     'active',
     '대전 중구 중앙로 00',
@@ -83,6 +86,7 @@ values
     '10000000-0000-4000-8000-000000000003',
     'bakery-busan-001',
     '웨이브 베이글',
+    array['WAVE BAGEL', '웨이브베이글', '웨이브 베이글 부산'],
     'wave-bagel-busan',
     'verification_needed',
     '부산 수영구 광안해변로 00',
@@ -126,4 +130,3 @@ values
     '30000000-0000-4000-8000-000000000002'
   )
 on conflict do nothing;
-

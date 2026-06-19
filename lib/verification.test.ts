@@ -32,20 +32,16 @@ describe("operating status", () => {
   it("does not claim an old record is open", () => {
     const staleBakery = bakeries[2];
     expect(
-      getOperatingStatus(
-        staleBakery,
-        new Date("2026-06-18T12:00:00+09:00"),
-      ).state,
+      getOperatingStatus(staleBakery, new Date("2026-06-18T12:00:00+09:00"))
+        .state,
     ).toBe("unknown");
   });
 
   it("uses verified business hours for a fresh record", () => {
     const freshBakery = bakeries[0];
     expect(
-      getOperatingStatus(
-        freshBakery,
-        new Date("2026-06-18T12:00:00+09:00"),
-      ).state,
+      getOperatingStatus(freshBakery, new Date("2026-06-18T12:00:00+09:00"))
+        .state,
     ).toBe("open");
   });
 
@@ -96,18 +92,28 @@ describe("operating status", () => {
 describe("bakery search", () => {
   it("searches bakery names and menu names", () => {
     expect(searchBakeries({ q: "소금빵" })).toHaveLength(1);
-    expect(searchBakeries({ q: "웨이브" })[0]?.slug).toBe(
+    expect(searchBakeries({ q: "웨이브" })[0]?.slug).toBe("wave-bagel-busan");
+  });
+
+  it("searches foreign bakery names with curated Korean aliases", () => {
+    expect(searchBakeries({ q: "멜로우오븐" })[0]?.slug).toBe(
+      "mellow-oven-seongsu",
+    );
+    expect(searchBakeries({ q: "올드 타운 베이커리" })[0]?.slug).toBe(
+      "old-town-bakery-daejeon",
+    );
+    expect(searchBakeries({ q: "웨이브-베이글 부산" })[0]?.slug).toBe(
       "wave-bagel-busan",
     );
   });
 
   it("combines category and region filters", () => {
-    expect(
-      searchBakeries({ category: "bagel", region: "부산" }),
-    ).toHaveLength(1);
-    expect(
-      searchBakeries({ category: "bagel", region: "서울" }),
-    ).toHaveLength(0);
+    expect(searchBakeries({ category: "bagel", region: "부산" })).toHaveLength(
+      1,
+    );
+    expect(searchBakeries({ category: "bagel", region: "서울" })).toHaveLength(
+      0,
+    );
   });
 });
 

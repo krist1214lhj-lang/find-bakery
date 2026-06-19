@@ -152,6 +152,7 @@ create table public.bakery_locations (
   brand_id uuid not null references public.bakery_brands(id) on delete restrict,
   seed_key text unique,
   name text not null check (char_length(name) between 1 and 160),
+  search_aliases text[] not null default '{}',
   slug text not null unique check (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
   status public.location_status not null default 'draft',
   road_address text not null check (char_length(road_address) between 5 and 300),

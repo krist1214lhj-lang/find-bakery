@@ -6,10 +6,10 @@
 
 - 초기 PostgreSQL 스키마와 RLS 정책: `supabase/migrations/202606180001_initial_schema.sql`
 - UI 검증용 시드: `supabase/seed.sql`
-- Supabase 생성 형식과 호환되는 타입 스냅샷: `lib/supabase/database.types.ts`
+- 로컬 스키마에서 생성한 TypeScript 타입: `lib/supabase/database.types.ts`
 - 정적 스키마 계약 검사: `npm run verify:schema`
 
-현재 작업 환경에는 Docker가 없어 로컬 Supabase 컨테이너에 마이그레이션을 실제 적용하지 못했다. 정적 검사 통과는 실제 PostgreSQL 적용 성공을 대신하지 않는다.
+2026-06-19에 Docker 기반 로컬 Supabase에서 초기 마이그레이션과 시드를 실제 적용했다. PostgreSQL 스키마 린트, 공개 지점 조회 RLS, 익명 제보 직접 입력 차단, 일반 사용자의 검수 RPC 차단, 검수자 승인 트랜잭션을 확인했다.
 
 ## 로컬 데이터베이스 검증
 
@@ -31,6 +31,18 @@ npm run verify
 5. 일반 로그인 사용자가 검수 RPC 실행 불가
 6. `reviewer` 또는 `admin` 역할만 검수 RPC 실행 가능
 7. 승인·반려 시 제보 상태와 `review_actions`가 한 트랜잭션으로 변경
+
+2026-06-19 로컬 확인 결과:
+
+- `npx supabase start`: 마이그레이션·시드 적용 성공
+- `npx supabase db lint`: 스키마 오류 0건
+- 시드 지점 3개와 `anon` 공개 조회 3개 일치
+- 지점 1개를 트랜잭션 안에서 `draft`로 바꾸면 `anon` 조회가 2개로 감소
+- `anon`의 `correction_reports` 직접 INSERT 권한 없음
+- `anon`의 검수 RPC 실행 권한 없음
+- 역할이 없는 `authenticated` 사용자의 검수 RPC 실행 차단
+- `reviewer` 역할 승인 시 제보 상태 `accepted`와 감사 이력 1건이 같은 트랜잭션에서 생성
+- `npx supabase gen types typescript --local` 생성본으로 타입 갱신 후 타입 검사 통과
 
 ## 원격 테스트 프로젝트 연결
 

@@ -1,8 +1,4 @@
-import type {
-  Bakery,
-  BakerySearchInput,
-  BreadCategory,
-} from "@/lib/types";
+import type { Bakery, BakerySearchInput, BreadCategory } from "@/lib/types";
 
 export const breadCategories: BreadCategory[] = [
   { name: "소금빵", slug: "salt-bread", emoji: "🥐" },
@@ -18,6 +14,12 @@ export const bakeries: Bakery[] = [
     id: "20000000-0000-4000-8000-000000000001",
     slug: "mellow-oven-seongsu",
     name: "멜로우 오븐 성수점",
+    searchAliases: [
+      "MELLOW OVEN",
+      "멜로우오븐",
+      "멜로우 오븐 성수",
+      "멜로우오븐 성수점",
+    ],
     region: "서울 성동구",
     roadAddress: "서울 성동구 연무장길 00",
     latitude: 37.5445,
@@ -63,6 +65,11 @@ export const bakeries: Bakery[] = [
     id: "20000000-0000-4000-8000-000000000002",
     slug: "old-town-bakery-daejeon",
     name: "오래뜰 제과",
+    searchAliases: [
+      "OLD TOWN BAKERY",
+      "올드 타운 베이커리",
+      "올드타운베이커리",
+    ],
     region: "대전 중구",
     roadAddress: "대전 중구 중앙로 00",
     latitude: 36.328,
@@ -117,6 +124,7 @@ export const bakeries: Bakery[] = [
     id: "20000000-0000-4000-8000-000000000003",
     slug: "wave-bagel-busan",
     name: "웨이브 베이글",
+    searchAliases: ["WAVE BAGEL", "웨이브베이글", "웨이브 베이글 부산"],
     region: "부산 수영구",
     roadAddress: "부산 수영구 광안해변로 00",
     latitude: 35.1532,
@@ -175,18 +183,22 @@ export function getRecentlyVerifiedBakeries(limit: number) {
 }
 
 export function searchBakeries(input: BakerySearchInput) {
-  const keyword = input.q?.trim().toLocaleLowerCase("ko-KR");
+  const keywords = getSearchKeywords(input.q);
 
   return bakeries.filter((bakery) => {
+    const searchableValues = [
+      bakery.name,
+      ...bakery.searchAliases,
+      bakery.region,
+      bakery.roadAddress,
+      ...bakery.categories,
+      ...bakery.menus.map((menu) => menu.name),
+    ].map(normalizeSearchValue);
     const matchesKeyword =
-      !keyword ||
-      [
-        bakery.name,
-        bakery.region,
-        bakery.roadAddress,
-        ...bakery.categories,
-        ...bakery.menus.map((menu) => menu.name),
-      ].some((value) => value.toLocaleLowerCase("ko-KR").includes(keyword));
+      keywords.length === 0 ||
+      keywords.every((keyword) =>
+        searchableValues.some((value) => value.includes(keyword)),
+      );
     const matchesCategory =
       !input.category || bakery.categorySlugs.includes(input.category);
     const matchesRegion =
@@ -194,4 +206,24 @@ export function searchBakeries(input: BakerySearchInput) {
 
     return matchesKeyword && matchesCategory && matchesRegion;
   });
+}
+
+function getSearchKeywords(query?: string) {
+  if (!query?.trim()) {
+    return [];
+  }
+
+  return query
+    .normalize("NFKC")
+    .toLocaleLowerCase("ko-KR")
+    .split(/[^\p{L}\p{N}]+/u)
+    .map(normalizeSearchValue)
+    .filter(Boolean);
+}
+
+function normalizeSearchValue(value: string) {
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase("ko-KR")
+    .replace(/[^\p{L}\p{N}]+/gu, "");
 }

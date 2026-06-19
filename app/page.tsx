@@ -6,8 +6,8 @@ export default function HomePage() {
   const recentBakeries = getRecentlyVerifiedBakeries(3);
 
   return (
-    <>
-      <section className="hero-section">
+    <div className="home-snap">
+      <section className="hero-section home-panel" aria-label="빵길 시작">
         <div className="hero-copy">
           <div className="hero-kicker">
             <span aria-hidden="true">✦</span>
@@ -86,11 +86,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="content-section category-section">
+      <section
+        className="content-section category-section home-panel"
+        aria-labelledby="home-category-title"
+      >
         <div className="section-heading">
           <div>
             <span className="eyebrow">BREAD FIRST</span>
-            <h2>오늘 마음이 가는 빵은?</h2>
+            <h2 id="home-category-title">오늘 마음이 가는 빵은?</h2>
           </div>
           <p>지역을 정하지 않아도 좋아요. 먹고 싶은 것부터 골라보세요.</p>
         </div>
@@ -109,11 +112,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="content-section">
+      <section
+        className="content-section home-panel home-featured-panel"
+        aria-labelledby="home-featured-title"
+      >
         <div className="section-heading">
           <div>
             <span className="eyebrow">FRESHLY CHECKED</span>
-            <h2>최근 정보가 확인된 빵집</h2>
+            <h2 id="home-featured-title">최근 정보가 확인된 빵집</h2>
           </div>
           <Link href="/explore">전체 보기 →</Link>
         </div>
@@ -122,12 +128,18 @@ export default function HomePage() {
             <BakeryCard bakery={bakery} key={bakery.id} />
           ))}
         </div>
+        <p className="home-swipe-hint" aria-hidden="true">
+          옆으로 넘겨 더 보기 →
+        </p>
       </section>
 
-      <section className="content-section region-section">
+      <section
+        className="content-section region-section home-panel"
+        aria-labelledby="home-region-title"
+      >
         <div>
           <span className="eyebrow">REGIONAL ROUTES</span>
-          <h2>
+          <h2 id="home-region-title">
             도시마다 다른
             <br />
             빵의 표정을 만나보세요.
@@ -149,6 +161,6 @@ export default function HomePage() {
           )}
         </div>
       </section>
-    </>
+    </div>
   );
 }

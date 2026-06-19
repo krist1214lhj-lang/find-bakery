@@ -55,6 +55,7 @@ export type Bakery = {
   id: string;
   slug: string;
   name: string;
+  searchAliases: string[];
   region: string;
   roadAddress: string;
   latitude: number;

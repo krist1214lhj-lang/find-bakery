@@ -10,12 +10,7 @@ const migrationPath = join(
 );
 const seedPath = join(root, "supabase", "seed.sql");
 const bakeryPath = join(root, "lib", "bakeries.ts");
-const databaseTypesPath = join(
-  root,
-  "lib",
-  "supabase",
-  "database.types.ts",
-);
+const databaseTypesPath = join(root, "lib", "supabase", "database.types.ts");
 
 const migration = readFileSync(migrationPath, "utf8");
 const seed = readFileSync(seedPath, "utf8");
@@ -49,6 +44,7 @@ const requiredFragments = [
   "correction_resolution_matches_status",
   "menu_price_requires_check_date",
   "special_schedule_range",
+  "search_aliases text[] not null default '{}'",
 ];
 
 const errors = [];
@@ -86,9 +82,7 @@ if (
 }
 
 const bakeryIds = [
-  ...bakeries.matchAll(
-    /id:\s*"(20000000-0000-4000-8000-[0-9]{12})"/g,
-  ),
+  ...bakeries.matchAll(/id:\s*"(20000000-0000-4000-8000-[0-9]{12})"/g),
 ].map((match) => match[1]);
 
 if (bakeryIds.length === 0) {
@@ -97,7 +91,9 @@ if (bakeryIds.length === 0) {
 
 for (const bakeryId of bakeryIds) {
   if (!seed.includes(bakeryId)) {
-    errors.push(`App bakery UUID is missing from supabase/seed.sql: ${bakeryId}`);
+    errors.push(
+      `App bakery UUID is missing from supabase/seed.sql: ${bakeryId}`,
+    );
   }
 }
 
