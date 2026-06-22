@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BakeryCard } from "@/components/bakery-card";
+import { NearbyBakerySearch } from "@/components/nearby-bakery-search";
 import { getBreadCategories, searchBakeries } from "@/lib/bakery-repository";
 
 export const metadata: Metadata = {
@@ -80,6 +81,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           </Link>
         </div>
       )}
+
+      <NearbyBakerySearch initialQuery={query.q} />
     </section>
   );
 }
