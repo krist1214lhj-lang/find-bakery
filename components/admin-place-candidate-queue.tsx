@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type {
+  PlaceCandidateRegistryEvidence,
   PlaceCandidateReviewAction,
   StoredPlaceCandidate,
   StoredPlaceCandidateReviewAction,
@@ -37,9 +38,9 @@ export function AdminPlaceCandidateQueue({ initialQueue }: Props) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [crossChecking, setCrossChecking] = useState(false);
-  const [registryMatches, setRegistryMatches] = useState<StoreRegistryMatch[]>(
-    [],
-  );
+  const [registryMatches, setRegistryMatches] = useState<
+    PlaceCandidateRegistryEvidence[]
+  >(initialQueue.candidates[0]?.registryEvidence ?? []);
 
   const candidate =
     queue.candidates.find((item) => item.id === selectedId) ??
@@ -121,7 +122,19 @@ export function AdminPlaceCandidateQueue({ initialQueue }: Props) {
         );
       }
 
-      setRegistryMatches(payload.matches);
+      setRegistryMatches(
+        payload.matches.map((match) => ({
+          id: `${match.provider}:${match.externalId}`,
+          provider: match.provider,
+          externalId: match.externalId,
+          name: match.name,
+          roadAddress: match.roadAddress,
+          lotAddress: match.lotAddress,
+          score: match.score,
+          reasons: match.reasons,
+          retrievedAt: match.retrievedAt,
+        })),
+      );
       setMessage(
         payload.matches.length > 0
           ? `공공 상가정보에서 일치 후보 ${payload.matches.length}건을 찾았어요.`
@@ -178,7 +191,7 @@ export function AdminPlaceCandidateQueue({ initialQueue }: Props) {
               setDuplicateLocationId("");
               setMessage("");
               setError("");
-              setRegistryMatches([]);
+              setRegistryMatches(item.registryEvidence);
             }}
             type="button"
           >

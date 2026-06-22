@@ -25,7 +25,7 @@
 | R-017 | 예정 | 폐점·이전 이력 보존              | 상세·관리자      | Location status, 변경 이력                                                     | 논리 모델만 존재                                                                                             |
 | R-018 | 부분 | 테스트 배포                      | 베타 전체        | 환경 변수·배포 설정                                                            | 로컬 production build·배포 환경 계약 구현; 원격 미리보기 미배포                                              |
 | R-019 | 구현 | 외부 후보 검수·정식 등록         | 탐색·관리자      | PlaceCandidate, PlaceCandidateReviewAction, Source, VerificationRecord         | 서명 후보 저장·중복 점수·승인 RPC·관리자 UI 및 실제 후보 저장→승인→C등급 공개 통합 검증 통과                 |
-| R-020 | 부분 | 지도·공공데이터 교차 확인        | 관리자 후보 검수 | StoreRegistryRecord, 공급자 오류 모델, 일치 점수                               | 소상공인 상가정보 어댑터·제과 업종 필터·관리자 확인 UI·fixture 테스트 구현; 실제 서비스 키 호출 전           |
+| R-020 | 구현 | 지도·공공데이터 교차 확인        | 관리자 후보 검수 | StoreRegistryRecord, PlaceCandidateEvidence, 일치 점수, B등급 규칙             | 실제 공공 API 90점 일치, 근거 저장, 승인 후 B등급과 지도·공공 두 출처 생성 통합 검증 통과                    |
 
 ## 구현 중 갱신 규칙
 

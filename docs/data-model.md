@@ -129,6 +129,26 @@ CorrectionReport 1 ── N ReviewAction
 | `matchedLocationId` | UUID        |    X | 중복 처리 시 연결한 기존 지점                 |
 | `createdAt`         | timestamptz |    O | 처리 시각                                     |
 
+### PlaceCandidateEvidence
+
+외부 후보와 독립 출처의 교차 확인 결과를 승인 전 근거로 보존한다.
+
+| 필드              | 타입        | 필수 | 설명                     |
+| ----------------- | ----------- | ---: | ------------------------ |
+| `candidateId`     | UUID        |    O | 장소 후보                |
+| `provider`        | text        |    O | 현재 `sbiz`              |
+| `externalId`      | text        |    O | 공공 상가업소 번호       |
+| `name`            | text        |    O | 공공데이터 상호          |
+| `industry*`       | text        |    X | 대·중·소 업종명          |
+| `lot/roadAddress` | text        |    X | 지번·도로명 주소         |
+| `latitude`        | decimal     |    O | 공공데이터 위도          |
+| `longitude`       | decimal     |    O | 공공데이터 경도          |
+| `matchScore`      | integer     |    O | 상호·주소·좌표 일치 점수 |
+| `matchReasons`    | text[]      |    O | 점수 근거                |
+| `retrievedAt`     | timestamptz |    O | 공급자 조회 시각         |
+
+70점 이상 근거가 있는 후보를 승인하면 공공데이터 `Source`와 주소·좌표 B등급 `VerificationRecord`를 생성하고 기존 카카오 기록도 B등급으로 승격한다.
+
 ### BusinessHour
 
 반복되는 기본 영업시간이다.

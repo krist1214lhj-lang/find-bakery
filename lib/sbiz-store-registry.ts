@@ -37,12 +37,13 @@ export async function searchSbizStores(
   }
 
   const url = new URL(process.env.DATA_GO_KR_STORE_API_URL || DEFAULT_API_URL);
-  url.searchParams.set("serviceKey", serviceKey);
+  url.searchParams.set("ServiceKey", serviceKey);
   url.searchParams.set("radius", String(SEARCH_RADIUS_METERS));
   url.searchParams.set("cx", String(longitude));
   url.searchParams.set("cy", String(latitude));
   url.searchParams.set("pageNo", "1");
   url.searchParams.set("numOfRows", "100");
+  url.searchParams.set("indsMclsCd", "I210");
   url.searchParams.set("type", "json");
 
   const controller = new AbortController();
@@ -95,29 +96,34 @@ export function parseSbizResponse(
   payload: unknown,
   retrievedAt: string,
 ): StoreRegistrySearchResult {
-  if (!isRecord(payload) || !isRecord(payload.response)) {
+  if (!isRecord(payload)) {
     throw invalidResponse();
   }
-  const response = payload.response;
-  if (!isRecord(response.header) || !isRecord(response.body)) {
+  const response = isRecord(payload.response) ? payload.response : payload;
+  const header = isRecord(response.header) ? response.header : response;
+  const body = isRecord(response.body) ? response.body : response;
+  if (!isRecord(header) || !isRecord(body)) {
     throw invalidResponse();
   }
 
-  const resultCode = String(response.header.resultCode ?? "");
+  const resultCode = String(header.resultCode ?? "");
   if (resultCode && resultCode !== "00" && resultCode !== "0000") {
     throw new StoreRegistryProviderError(
       resultCode.includes("AUTH")
         ? "PROVIDER_UNAUTHORIZED"
         : "PROVIDER_UNAVAILABLE",
-      typeof response.header.resultMsg === "string"
-        ? response.header.resultMsg
+      typeof header.resultMsg === "string"
+        ? header.resultMsg
         : "공공 상가정보 조회에 실패했어요.",
     );
   }
 
-  const body = response.body;
   const totalCount = Number(body.totalCount ?? 0);
-  const rawItems = isRecord(body.items) ? body.items.item : [];
+  const rawItems = Array.isArray(body.items)
+    ? body.items
+    : isRecord(body.items)
+      ? body.items.item
+      : body.item;
   const items = Array.isArray(rawItems) ? rawItems : rawItems ? [rawItems] : [];
   const stores = items.map((item) => parseStore(item, retrievedAt));
   return {
@@ -151,7 +157,9 @@ export function rankSbizMatches(
 
       const candidateAddress = candidate.roadAddress ?? candidate.address;
       const storeAddress = store.roadAddress ?? store.lotAddress ?? "";
-      if (normalize(candidateAddress) === normalize(storeAddress)) {
+      if (
+        normalizeAddress(candidateAddress) === normalizeAddress(storeAddress)
+      ) {
         score += 35;
         reasons.push("주소 일치");
       }
@@ -220,6 +228,21 @@ function normalize(value: string) {
     .normalize("NFKC")
     .toLocaleLowerCase("ko-KR")
     .replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+function normalizeAddress(value: string) {
+  return normalize(
+    value
+      .replace(/^서울특별시/u, "서울")
+      .replace(/^부산광역시/u, "부산")
+      .replace(/^대구광역시/u, "대구")
+      .replace(/^인천광역시/u, "인천")
+      .replace(/^광주광역시/u, "광주")
+      .replace(/^대전광역시/u, "대전")
+      .replace(/^울산광역시/u, "울산")
+      .replace(/^세종특별자치시/u, "세종")
+      .replace(/^제주특별자치도/u, "제주"),
+  );
 }
 
 function distanceMeters(

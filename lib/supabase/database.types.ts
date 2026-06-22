@@ -491,6 +491,74 @@ export type Database = {
           },
         ];
       };
+      place_candidate_evidence: {
+        Row: {
+          candidate_id: string;
+          created_at: string;
+          external_id: string;
+          id: string;
+          industry_large: string | null;
+          industry_middle: string | null;
+          industry_small: string | null;
+          latitude: number;
+          longitude: number;
+          lot_address: string | null;
+          match_reasons: string[];
+          match_score: number;
+          name: string;
+          provider: string;
+          retrieved_at: string;
+          road_address: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          candidate_id: string;
+          created_at?: string;
+          external_id: string;
+          id?: string;
+          industry_large?: string | null;
+          industry_middle?: string | null;
+          industry_small?: string | null;
+          latitude: number;
+          longitude: number;
+          lot_address?: string | null;
+          match_reasons?: string[];
+          match_score: number;
+          name: string;
+          provider: string;
+          retrieved_at: string;
+          road_address?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          candidate_id?: string;
+          created_at?: string;
+          external_id?: string;
+          id?: string;
+          industry_large?: string | null;
+          industry_middle?: string | null;
+          industry_small?: string | null;
+          latitude?: number;
+          longitude?: number;
+          lot_address?: string | null;
+          match_reasons?: string[];
+          match_score?: number;
+          name?: string;
+          provider?: string;
+          retrieved_at?: string;
+          road_address?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "place_candidate_evidence_candidate_id_fkey";
+            columns: ["candidate_id"];
+            isOneToOne: false;
+            referencedRelation: "place_candidates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       place_candidate_review_actions: {
         Row: {
           action: Database["public"]["Enums"]["place_candidate_review_action"];

@@ -86,11 +86,85 @@ describe("Sbiz store registry provider", () => {
     expect(matches[0]?.score).toBe(100);
   });
 
+  it("normalizes shortened and official metropolitan address names", () => {
+    const matches = rankSbizMatches(
+      {
+        name: "퍼먼트",
+        address: "서울 성동구 성수동1가",
+        roadAddress: "서울 성동구 서울숲2길 37",
+        latitude: 37.546,
+        longitude: 127.043,
+      },
+      [
+        {
+          provider: "sbiz",
+          externalId: "ferment",
+          name: "퍼먼트알티드",
+          industryMiddle: "기타 간이",
+          industrySmall: "빵/도넛",
+          roadAddress: "서울특별시 성동구 서울숲2길 37",
+          latitude: 37.54601,
+          longitude: 127.04301,
+          retrievedAt: "2026-06-22T00:00:00.000Z",
+        },
+      ],
+    );
+
+    expect(matches[0]?.score).toBe(90);
+    expect(matches[0]?.reasons).toContain("주소 일치");
+  });
+
+  it("accepts the official flat response shape", () => {
+    const result = parseSbizResponse(
+      {
+        resultCode: "00",
+        resultMsg: "NORMAL SERVICE.",
+        totalCount: "1",
+        items: [
+          {
+            bizesId: "flat-1",
+            bizesNm: "평평한빵집",
+            indsMclsNm: "제과·제빵",
+            rdnmAdr: "서울 성동구 성수이로 2",
+            lon: "127.05",
+            lat: "37.54",
+          },
+        ],
+      },
+      "2026-06-22T00:00:00.000Z",
+    );
+
+    expect(result.stores[0]?.externalId).toBe("flat-1");
+  });
+
   it("requires a public data service key", async () => {
     delete process.env.DATA_GO_KR_SERVICE_KEY;
 
     await expect(searchSbizStores(37.54, 127.05)).rejects.toMatchObject({
       code: "PROVIDER_UNAVAILABLE",
     });
+  });
+
+  it("uses the case-sensitive ServiceKey parameter from the official spec", async () => {
+    process.env.DATA_GO_KR_SERVICE_KEY = "test-service-key";
+    let requestedUrl = "";
+    const fetcher: typeof fetch = async (input) => {
+      requestedUrl = String(input);
+      return new Response(
+        JSON.stringify({
+          response: {
+            header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
+            body: { totalCount: 0, items: { item: [] } },
+          },
+        }),
+      );
+    };
+
+    await searchSbizStores(37.54, 127.05, fetcher);
+
+    const url = new URL(requestedUrl);
+    expect(url.searchParams.get("ServiceKey")).toBe("test-service-key");
+    expect(url.searchParams.has("serviceKey")).toBe(false);
+    expect(url.searchParams.get("indsMclsCd")).toBe("I210");
   });
 });

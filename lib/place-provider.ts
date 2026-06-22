@@ -42,6 +42,19 @@ export type StoredPlaceCandidate = Omit<
   createdAt: string;
   reviewedAt?: string;
   possibleDuplicates: PlaceCandidateDuplicate[];
+  registryEvidence: PlaceCandidateRegistryEvidence[];
+};
+
+export type PlaceCandidateRegistryEvidence = {
+  id: string;
+  provider: "sbiz";
+  externalId: string;
+  name: string;
+  roadAddress?: string;
+  lotAddress?: string;
+  score: number;
+  reasons: string[];
+  retrievedAt: string;
 };
 
 export type PlaceCandidateDuplicate = {

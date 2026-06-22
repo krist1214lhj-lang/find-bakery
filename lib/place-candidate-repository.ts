@@ -17,6 +17,8 @@ type LocationRow = Pick<
   Database["public"]["Tables"]["bakery_locations"]["Row"],
   "id" | "name" | "road_address" | "phone" | "latitude" | "longitude"
 >;
+type EvidenceRow =
+  Database["public"]["Tables"]["place_candidate_evidence"]["Row"];
 
 export type AdminPlaceCandidateQueue = {
   candidates: StoredPlaceCandidate[];
@@ -29,22 +31,30 @@ export async function getAdminPlaceCandidateQueue(): Promise<AdminPlaceCandidate
     throw new Error("Supabase 관리자 설정이 필요합니다.");
   }
 
-  const [candidatesResult, actionsResult, locationsResult] = await Promise.all([
-    supabase.from("place_candidates").select("*").order("created_at", {
-      ascending: false,
-    }),
-    supabase
-      .from("place_candidate_review_actions")
-      .select("*")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("bakery_locations")
-      .select("id,name,road_address,phone,latitude,longitude"),
-  ]);
+  const [candidatesResult, actionsResult, locationsResult, evidenceResult] =
+    await Promise.all([
+      supabase.from("place_candidates").select("*").order("created_at", {
+        ascending: false,
+      }),
+      supabase
+        .from("place_candidate_review_actions")
+        .select("*")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("bakery_locations")
+        .select("id,name,road_address,phone,latitude,longitude"),
+      supabase
+        .from("place_candidate_evidence")
+        .select("*")
+        .order("match_score", { ascending: false }),
+    ]);
 
-  const failed = [candidatesResult, actionsResult, locationsResult].find(
-    (result) => result.error,
-  );
+  const failed = [
+    candidatesResult,
+    actionsResult,
+    locationsResult,
+    evidenceResult,
+  ].find((result) => result.error);
   if (failed?.error) {
     throw new Error(`장소 후보 큐 조회 실패: ${failed.error.message}`);
   }
@@ -52,7 +62,7 @@ export async function getAdminPlaceCandidateQueue(): Promise<AdminPlaceCandidate
   const locations = locationsResult.data ?? [];
   return {
     candidates: (candidatesResult.data ?? []).map((candidate) =>
-      mapCandidate(candidate, locations),
+      mapCandidate(candidate, locations, evidenceResult.data ?? []),
     ),
     actions: (actionsResult.data ?? []).map(mapCandidateAction),
   };
@@ -95,6 +105,7 @@ export async function reviewAdminPlaceCandidate(
 function mapCandidate(
   candidate: CandidateRow,
   locations: LocationRow[],
+  evidence: EvidenceRow[],
 ): StoredPlaceCandidate {
   return {
     id: candidate.id,
@@ -135,6 +146,19 @@ function mapCandidate(
         longitude: Number(location.longitude),
       })),
     ),
+    registryEvidence: evidence
+      .filter((item) => item.candidate_id === candidate.id)
+      .map((item) => ({
+        id: item.id,
+        provider: "sbiz" as const,
+        externalId: item.external_id,
+        name: item.name,
+        roadAddress: item.road_address ?? undefined,
+        lotAddress: item.lot_address ?? undefined,
+        score: item.match_score,
+        reasons: item.match_reasons,
+        retrievedAt: item.retrieved_at,
+      })),
   };
 }
 

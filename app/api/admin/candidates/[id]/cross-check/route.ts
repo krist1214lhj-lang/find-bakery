@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isDemoAdminEnabled } from "@/lib/admin-report-repository";
 import { getAdminPlaceCandidate } from "@/lib/place-candidate-repository";
 import { crossCheckWithSbiz } from "@/lib/sbiz-store-registry";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { StoreRegistryProviderError } from "@/lib/store-registry-provider";
 
 type CrossCheckRouteProps = {
@@ -27,6 +28,39 @@ export async function POST(
 
   try {
     const matches = await crossCheckWithSbiz(candidate);
+    const supabase = createSupabaseAdminClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { message: "Supabase 관리자 설정이 필요합니다." },
+        { status: 503 },
+      );
+    }
+
+    if (matches.length > 0) {
+      const { error } = await supabase.from("place_candidate_evidence").upsert(
+        matches.map((match) => ({
+          candidate_id: candidate.id,
+          provider: match.provider,
+          external_id: match.externalId,
+          name: match.name,
+          industry_large: match.industryLarge ?? null,
+          industry_middle: match.industryMiddle ?? null,
+          industry_small: match.industrySmall ?? null,
+          lot_address: match.lotAddress ?? null,
+          road_address: match.roadAddress ?? null,
+          latitude: match.latitude,
+          longitude: match.longitude,
+          match_score: match.score,
+          match_reasons: match.reasons,
+          retrieved_at: match.retrievedAt,
+        })),
+        { onConflict: "candidate_id,provider,external_id" },
+      );
+      if (error) {
+        throw new Error(error.message);
+      }
+    }
+
     return NextResponse.json(
       { matches },
       { headers: { "Cache-Control": "no-store" } },
