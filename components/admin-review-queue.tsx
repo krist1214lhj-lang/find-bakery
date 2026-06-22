@@ -1,20 +1,19 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import type {
   CorrectionReviewAction,
   CorrectionReportStatus,
+  StoredCorrectionReport,
+  StoredReviewAction,
 } from "@/lib/types";
-import {
-  CORRECTION_REPORTS_KEY,
-  REVIEW_ACTIONS_KEY,
-  parseCorrectionReports,
-  parseReviewActions,
-  reviewCorrectionReport,
-} from "@/lib/storage";
 
-export const CORRECTION_CHANGE_EVENT = "bbang-gil:correction-change";
-const EMPTY_QUEUE_SNAPSHOT = '["[]","[]"]';
+type AdminReportQueueProps = {
+  initialQueue: {
+    reports: StoredCorrectionReport[];
+    actions: StoredReviewAction[];
+  };
+};
 
 const statusLabels: Record<CorrectionReportStatus, string> = {
   submitted: "접수",
@@ -34,49 +33,16 @@ const categoryLabels = {
   other: "기타",
 } as const;
 
-function subscribe(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(CORRECTION_CHANGE_EVENT, onStoreChange);
-
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(CORRECTION_CHANGE_EVENT, onStoreChange);
-  };
-}
-
-function getSnapshot() {
-  try {
-    const reports =
-      window.localStorage.getItem(CORRECTION_REPORTS_KEY) ?? "[]";
-    const actions = window.localStorage.getItem(REVIEW_ACTIONS_KEY) ?? "[]";
-    return JSON.stringify([reports, actions]);
-  } catch {
-    return EMPTY_QUEUE_SNAPSHOT;
-  }
-}
-
-function getServerSnapshot() {
-  return EMPTY_QUEUE_SNAPSHOT;
-}
-
-export function AdminReviewQueue() {
-  const snapshot = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot,
+export function AdminReviewQueue({ initialQueue }: AdminReportQueueProps) {
+  const [reports, setReports] = useState(initialQueue.reports);
+  const [actions, setActions] = useState(initialQueue.actions);
+  const [selectedId, setSelectedId] = useState(
+    initialQueue.reports[0]?.id ?? "",
   );
-  const reports = useMemo(() => {
-    const [reportsRaw] = parseQueueSnapshot(snapshot);
-    return parseCorrectionReports(reportsRaw);
-  }, [snapshot]);
-  const actions = useMemo(() => {
-    const [, actionsRaw] = parseQueueSnapshot(snapshot);
-    return parseReviewActions(actionsRaw);
-  }, [snapshot]);
-  const [selectedId, setSelectedId] = useState("");
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const selectedReport =
     reports.find((report) => report.id === selectedId) ?? reports[0];
@@ -90,24 +56,38 @@ export function AdminReviewQueue() {
       report.status === "in-review",
   ).length;
 
-  function review(action: CorrectionReviewAction) {
-    if (!selectedReport) {
+  async function review(action: CorrectionReviewAction) {
+    if (!selectedReport || submitting) {
       return;
     }
 
     setError("");
     setMessage("");
+    setSubmitting(true);
     try {
-      const result = reviewCorrectionReport(
-        window.localStorage,
-        selectedReport.id,
-        action,
-        reason,
-      );
-      window.dispatchEvent(new Event(CORRECTION_CHANGE_EVENT));
+      const response = await fetch(`/api/admin/reports/${selectedReport.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, reason }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        reports?: StoredCorrectionReport[];
+        actions?: StoredReviewAction[];
+        message?: string;
+      } | null;
+
+      if (!response.ok || !payload?.reports || !payload.actions) {
+        throw new Error(payload?.message ?? "검수 상태를 변경하지 못했어요.");
+      }
+
+      setReports(payload.reports);
+      setActions(payload.actions);
       setReason("");
+      const updatedReport = payload.reports.find(
+        (report) => report.id === selectedReport.id,
+      );
       setMessage(
-        `제보를 '${statusLabels[result.report.status]}' 상태로 변경했어요.`,
+        `제보를 '${statusLabels[updatedReport?.status ?? selectedReport.status]}' 상태로 변경했어요.`,
       );
     } catch (cause) {
       setError(
@@ -115,6 +95,8 @@ export function AdminReviewQueue() {
           ? cause.message
           : "검수 상태를 변경하지 못했어요.",
       );
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -122,7 +104,7 @@ export function AdminReviewQueue() {
     return (
       <div className="empty-state">
         <span aria-hidden="true">✓</span>
-        <h2>검수할 로컬 제보가 없어요.</h2>
+        <h2>검수할 서버 제보가 없어요.</h2>
         <p>제보 화면에서 접수한 내용이 이곳에 표시됩니다.</p>
       </div>
     );
@@ -164,7 +146,7 @@ export function AdminReviewQueue() {
         >
           <div className="admin-detail-heading">
             <div>
-              <span className="eyebrow">LOCAL REVIEW QUEUE</span>
+              <span className="eyebrow">SUPABASE REVIEW QUEUE</span>
               <h2 id="admin-report-title">{selectedReport.bakeryName}</h2>
             </div>
             <span className={`review-status status-${selectedReport.status}`}>
@@ -179,7 +161,9 @@ export function AdminReviewQueue() {
             </div>
             <div>
               <dt>접수 시각</dt>
-              <dd>{new Date(selectedReport.createdAt).toLocaleString("ko-KR")}</dd>
+              <dd>
+                {new Date(selectedReport.createdAt).toLocaleString("ko-KR")}
+              </dd>
             </div>
             <div className="wide">
               <dt>제보 내용</dt>
@@ -220,14 +204,23 @@ export function AdminReviewQueue() {
                 value={reason}
               />
               <div className="review-actions">
-                <button onClick={() => review("hold")} type="button">
+                <button
+                  disabled={submitting}
+                  onClick={() => review("hold")}
+                  type="button"
+                >
                   보류
                 </button>
-                <button onClick={() => review("mark-duplicate")} type="button">
+                <button
+                  disabled={submitting}
+                  onClick={() => review("mark-duplicate")}
+                  type="button"
+                >
                   중복
                 </button>
                 <button
                   className="danger"
+                  disabled={submitting}
                   onClick={() => review("reject")}
                   type="button"
                 >
@@ -235,10 +228,11 @@ export function AdminReviewQueue() {
                 </button>
                 <button
                   className="approve"
+                  disabled={submitting}
                   onClick={() => review("approve")}
                   type="button"
                 >
-                  승인
+                  {submitting ? "처리 중…" : "승인"}
                 </button>
               </div>
             </div>
@@ -280,21 +274,4 @@ export function AdminReviewQueue() {
       ) : null}
     </div>
   );
-}
-
-function parseQueueSnapshot(snapshot: string): [string, string] {
-  try {
-    const parsed: unknown = JSON.parse(snapshot);
-    if (
-      Array.isArray(parsed) &&
-      typeof parsed[0] === "string" &&
-      typeof parsed[1] === "string"
-    ) {
-      return [parsed[0], parsed[1]];
-    }
-  } catch {
-    // Invalid browser storage is treated as an empty queue.
-  }
-
-  return ["[]", "[]"];
 }

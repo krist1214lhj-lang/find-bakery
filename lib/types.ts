@@ -23,21 +23,22 @@ export type CorrectionReviewAction =
   | "approve"
   | "reject"
   | "hold"
-  | "mark-duplicate";
+  | "mark-duplicate"
+  | "request-more-info";
 
 export type VerificationSummary = {
   grade: VerificationGrade;
   checkedAt: string;
   sourceLabel: string;
-  sourceUrl: string;
+  sourceUrl?: string;
 };
 
 export type MenuItem = {
   id: string;
   name: string;
-  price: number;
+  price?: number;
   emoji: string;
-  checkedAt: string;
+  checkedAt?: string;
 };
 
 export type SpecialSchedule = {
@@ -60,7 +61,7 @@ export type Bakery = {
   roadAddress: string;
   latitude: number;
   longitude: number;
-  phone: string;
+  phone?: string;
   categories: string[];
   categorySlugs: string[];
   imageTone: ImageTone;

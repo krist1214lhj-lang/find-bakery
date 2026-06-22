@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SaveButton } from "@/components/save-button";
 import { VerificationBadge } from "@/components/verification-badge";
-import { getBakeryBySlug } from "@/lib/bakeries";
+import { getBakeryBySlug } from "@/lib/bakery-repository";
 import { formatCheckedDate, getOperatingStatus } from "@/lib/verification";
 
 type BakeryDetailPageProps = {
@@ -14,7 +14,7 @@ export async function generateMetadata({
   params,
 }: BakeryDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const bakery = getBakeryBySlug(slug);
+  const bakery = await getBakeryBySlug(slug);
 
   return {
     title: bakery?.name ?? "빵집을 찾을 수 없음",
@@ -28,7 +28,7 @@ export default async function BakeryDetailPage({
   params,
 }: BakeryDetailPageProps) {
   const { slug } = await params;
-  const bakery = getBakeryBySlug(slug);
+  const bakery = await getBakeryBySlug(slug);
 
   if (!bakery) {
     notFound();
@@ -79,13 +79,17 @@ export default async function BakeryDetailPage({
             {formatCheckedDate(bakery.verification.checkedAt)}에{" "}
             {bakery.verification.sourceLabel}에서 영업 정보를 확인했어요.
           </p>
-          <a
-            href={bakery.verification.sourceUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            공식 원문 보기 ↗
-          </a>
+          {bakery.verification.sourceUrl ? (
+            <a
+              href={bakery.verification.sourceUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              공식 원문 보기 ↗
+            </a>
+          ) : (
+            <span className="muted-copy">공개 원문 링크 확인 중</span>
+          )}
         </section>
 
         <div className="action-grid">
@@ -98,7 +102,11 @@ export default async function BakeryDetailPage({
           >
             길찾기
           </a>
-          <a href={`tel:${bakery.phone.replaceAll("-", "")}`}>전화</a>
+          {bakery.phone ? (
+            <a href={`tel:${bakery.phone.replaceAll("-", "")}`}>전화</a>
+          ) : (
+            <span className="disabled-action">전화번호 확인 중</span>
+          )}
           <SaveButton
             bakeryId={bakery.id}
             bakeryName={bakery.name}
@@ -118,8 +126,16 @@ export default async function BakeryDetailPage({
               <div className="menu-card" key={menu.id}>
                 <span aria-hidden="true">{menu.emoji}</span>
                 <h3>{menu.name}</h3>
-                <strong>{menu.price.toLocaleString("ko-KR")}원</strong>
-                <small>{formatCheckedDate(menu.checkedAt)} 가격 확인</small>
+                <strong>
+                  {menu.price === undefined
+                    ? "가격 확인 중"
+                    : `${menu.price.toLocaleString("ko-KR")}원`}
+                </strong>
+                <small>
+                  {menu.checkedAt
+                    ? `${formatCheckedDate(menu.checkedAt)} 가격 확인`
+                    : "가격 확인일 준비 중"}
+                </small>
               </div>
             ))}
           </div>

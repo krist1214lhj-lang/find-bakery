@@ -1,6 +1,6 @@
 # Supabase 데이터베이스 설정
 
-작성 기준일: 2026-06-18
+작성 기준일: 2026-06-22
 
 ## 현재 상태
 
@@ -21,6 +21,16 @@ npx supabase db reset
 npx supabase gen types typescript --local > lib/supabase/database.types.ts
 npm run verify
 ```
+
+앱 실행 전 `.env.local`에 로컬 Supabase가 표시한 공개 값을 등록한다.
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<LOCAL_PUBLISHABLE_OR_ANON_KEY>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+공개 조회에는 anon/publishable 키만 사용한다. Secret 또는 service role 키를 `NEXT_PUBLIC_` 변수에 넣지 않는다.
 
 확인 항목:
 
@@ -43,6 +53,12 @@ npm run verify
 - 역할이 없는 `authenticated` 사용자의 검수 RPC 실행 차단
 - `reviewer` 역할 승인 시 제보 상태 `accepted`와 감사 이력 1건이 같은 트랜잭션에서 생성
 - `npx supabase gen types typescript --local` 생성본으로 타입 갱신 후 타입 검사 통과
+
+2026-06-22 재검증:
+
+- `npx supabase db reset`으로 빈 DB에서 마이그레이션·전체 시드 적용 성공
+- 지점 3개, 영업시간 21개, 메뉴 6개, 출처·검증·유명세 근거 각 3개 생성
+- 서버 제보 → 관리자 큐 → 검수 RPC 승인 → 감사 이력 흐름 통과
 
 ## 원격 테스트 프로젝트 연결
 

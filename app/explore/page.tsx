@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BakeryCard } from "@/components/bakery-card";
-import { breadCategories, searchBakeries } from "@/lib/bakeries";
+import { getBreadCategories, searchBakeries } from "@/lib/bakery-repository";
 
 export const metadata: Metadata = {
   title: "빵집 탐색",
@@ -17,7 +17,10 @@ type ExplorePageProps = {
 
 export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const query = await searchParams;
-  const results = searchBakeries(query);
+  const [breadCategories, results] = await Promise.all([
+    getBreadCategories(),
+    searchBakeries(query),
+  ]);
   const selectedCategory = breadCategories.find(
     (category) => category.slug === query.category,
   );
@@ -58,7 +61,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
       <div className="result-summary">
         <strong>{results.length}곳</strong>
-        <span>시드 데이터 기반 미리보기</span>
+        <span>Supabase 공개 데이터 기준</span>
       </div>
 
       {results.length > 0 ? (

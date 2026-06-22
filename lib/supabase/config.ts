@@ -3,6 +3,29 @@ export type SupabaseServerConfig = {
   secretKey: string;
 };
 
+export type SupabasePublicConfig = {
+  url: string;
+  anonKey: string;
+};
+
+export function getSupabasePublicConfig():
+  | { configured: true; value: SupabasePublicConfig }
+  | { configured: false } {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+  if (!url || !anonKey) {
+    return { configured: false };
+  }
+
+  assertValidHttpsUrl(url);
+
+  return {
+    configured: true,
+    value: { url, anonKey },
+  };
+}
+
 export function getSupabaseServerConfig():
   | { configured: true; value: SupabaseServerConfig }
   | { configured: false } {

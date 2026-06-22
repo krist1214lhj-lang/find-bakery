@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { bakeries } from "@/lib/bakeries";
+import { getBakeryById } from "@/lib/bakery-repository";
 import { validateCorrectionDraft } from "@/lib/storage";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type {
@@ -10,12 +10,7 @@ import type {
 
 const categoryMap: Record<
   CorrectionCategory,
-  | "hours"
-  | "closure"
-  | "relocation"
-  | "menu_price"
-  | "phone_address"
-  | "other"
+  "hours" | "closure" | "relocation" | "menu_price" | "phone_address" | "other"
 > = {
   hours: "hours",
   closure: "closure",
@@ -41,7 +36,7 @@ export async function POST(request: Request) {
     return jsonError(validation.message, 400);
   }
 
-  const bakery = bakeries.find((candidate) => candidate.id === draft.bakeryId);
+  const bakery = await getBakeryById(draft.bakeryId);
   if (!bakery || bakery.name !== draft.bakeryName) {
     return jsonError("제보할 빵집을 찾을 수 없어요.", 404);
   }
@@ -64,7 +59,9 @@ export async function POST(request: Request) {
       source_url: draft.sourceUrl?.trim() || null,
       status: "submitted",
     })
-    .select("id, location_id, category, description, source_url, status, created_at")
+    .select(
+      "id, location_id, category, description, source_url, status, created_at",
+    )
     .single();
 
   if (error) {

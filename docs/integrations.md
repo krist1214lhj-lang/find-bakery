@@ -150,9 +150,14 @@ MVP 원칙:
 
 현재 구현:
 
+- 홈·탐색·상세 화면은 공개 anon/publishable 키와 RLS로 조회
 - 익명 제보는 `/api/reports` Route Handler에서 검증 후 저장
 - 서버 설정이 없으면 브라우저와 API가 `local-only` 모드를 협상
 - 관리자 검수는 `review_correction_report` RPC로만 상태 변경
+- 개발 관리자 큐는 서버 전용 키로 제보를 읽고 RPC로 검수
+- 서비스 역할 검수도 `server_service` 감사 주체를 기록
+- 2026-06-19 로컬 브라우저 제출과 `correction_reports` 실제 INSERT 확인
+- 2026-06-19 관리자 큐 표시, 승인 상태 전이, `review_actions` 생성 확인
 - 자세한 적용 절차는 `docs/database-setup.md`
 
 ## 6. Vercel

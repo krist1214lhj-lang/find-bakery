@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CorrectionForm } from "@/components/correction-form";
-import { getBakeryBySlug } from "@/lib/bakeries";
+import { getBakeryBySlug } from "@/lib/bakery-repository";
 
 type CorrectionPageProps = {
   params: Promise<{ slug: string }>;
@@ -12,18 +12,16 @@ export async function generateMetadata({
   params,
 }: CorrectionPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const bakery = getBakeryBySlug(slug);
+  const bakery = await getBakeryBySlug(slug);
 
   return {
     title: bakery ? `${bakery.name} 정보 수정 제보` : "정보 수정 제보",
   };
 }
 
-export default async function CorrectionPage({
-  params,
-}: CorrectionPageProps) {
+export default async function CorrectionPage({ params }: CorrectionPageProps) {
   const { slug } = await params;
-  const bakery = getBakeryBySlug(slug);
+  const bakery = await getBakeryBySlug(slug);
 
   if (!bakery) {
     notFound();

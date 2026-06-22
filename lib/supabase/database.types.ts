@@ -500,7 +500,8 @@ export type Database = {
           previous_status: Database["public"]["Enums"]["correction_status"];
           reason: string;
           report_id: string;
-          reviewer_id: string;
+          reviewer_id: string | null;
+          reviewer_label: string;
         };
         Insert: {
           action: Database["public"]["Enums"]["review_action_type"];
@@ -510,7 +511,8 @@ export type Database = {
           previous_status: Database["public"]["Enums"]["correction_status"];
           reason: string;
           report_id: string;
-          reviewer_id: string;
+          reviewer_id?: string | null;
+          reviewer_label?: string;
         };
         Update: {
           action?: Database["public"]["Enums"]["review_action_type"];
@@ -520,7 +522,8 @@ export type Database = {
           previous_status?: Database["public"]["Enums"]["correction_status"];
           reason?: string;
           report_id?: string;
-          reviewer_id?: string;
+          reviewer_id?: string | null;
+          reviewer_label?: string;
         };
         Relationships: [
           {

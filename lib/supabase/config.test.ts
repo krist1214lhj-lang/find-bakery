@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { getSupabaseServerConfig } from "@/lib/supabase/config";
+import {
+  getSupabasePublicConfig,
+  getSupabaseServerConfig,
+} from "@/lib/supabase/config";
 
 const originalEnv = { ...process.env };
 
@@ -8,12 +11,32 @@ afterEach(() => {
 });
 
 describe("Supabase server configuration", () => {
-  it("is optional during local prototype development", () => {
+  it("reports missing server configuration", () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.SUPABASE_SECRET_KEY;
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     expect(getSupabaseServerConfig()).toEqual({ configured: false });
+  });
+
+  it("reads the public RLS client configuration", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "local-publishable-key";
+
+    expect(getSupabasePublicConfig()).toEqual({
+      configured: true,
+      value: {
+        url: "http://127.0.0.1:54321",
+        anonKey: "local-publishable-key",
+      },
+    });
+  });
+
+  it("requires both public URL and anon key", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    expect(getSupabasePublicConfig()).toEqual({ configured: false });
   });
 
   it("prefers the current secret key over the legacy service role key", () => {

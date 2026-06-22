@@ -1,4 +1,5 @@
 import type { Bakery, BakerySearchInput, BreadCategory } from "@/lib/types";
+import { filterBakeries } from "@/lib/bakery-repository";
 
 export const breadCategories: BreadCategory[] = [
   { name: "소금빵", slug: "salt-bread", emoji: "🥐" },
@@ -183,47 +184,5 @@ export function getRecentlyVerifiedBakeries(limit: number) {
 }
 
 export function searchBakeries(input: BakerySearchInput) {
-  const keywords = getSearchKeywords(input.q);
-
-  return bakeries.filter((bakery) => {
-    const searchableValues = [
-      bakery.name,
-      ...bakery.searchAliases,
-      bakery.region,
-      bakery.roadAddress,
-      ...bakery.categories,
-      ...bakery.menus.map((menu) => menu.name),
-    ].map(normalizeSearchValue);
-    const matchesKeyword =
-      keywords.length === 0 ||
-      keywords.every((keyword) =>
-        searchableValues.some((value) => value.includes(keyword)),
-      );
-    const matchesCategory =
-      !input.category || bakery.categorySlugs.includes(input.category);
-    const matchesRegion =
-      !input.region || bakery.region.startsWith(input.region);
-
-    return matchesKeyword && matchesCategory && matchesRegion;
-  });
-}
-
-function getSearchKeywords(query?: string) {
-  if (!query?.trim()) {
-    return [];
-  }
-
-  return query
-    .normalize("NFKC")
-    .toLocaleLowerCase("ko-KR")
-    .split(/[^\p{L}\p{N}]+/u)
-    .map(normalizeSearchValue)
-    .filter(Boolean);
-}
-
-function normalizeSearchValue(value: string) {
-  return value
-    .normalize("NFKC")
-    .toLocaleLowerCase("ko-KR")
-    .replace(/[^\p{L}\p{N}]+/gu, "");
+  return filterBakeries(bakeries, input);
 }

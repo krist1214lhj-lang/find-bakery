@@ -99,9 +99,7 @@ export function parseReviewActions(raw: string | null): StoredReviewAction[] {
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed)
-      ? parsed.filter(isStoredReviewAction)
-      : [];
+    return Array.isArray(parsed) ? parsed.filter(isStoredReviewAction) : [];
   } catch {
     return [];
   }
@@ -159,9 +157,9 @@ export function reviewCorrectionReport(
   return { report: nextReport, action: reviewAction };
 }
 
-export function validateCorrectionDraft(draft: CorrectionDraft):
-  | { valid: true }
-  | { valid: false; message: string } {
+export function validateCorrectionDraft(
+  draft: CorrectionDraft,
+): { valid: true } | { valid: false; message: string } {
   if (!isCorrectionCategory(draft.category)) {
     return { valid: false, message: "다른 정보의 종류를 선택해 주세요." };
   }
@@ -268,9 +266,7 @@ function isStoredReviewAction(value: unknown): value is StoredReviewAction {
   );
 }
 
-function isCorrectionStatus(
-  value: unknown,
-): value is CorrectionReportStatus {
+function isCorrectionStatus(value: unknown): value is CorrectionReportStatus {
   return (
     value === "submitted" ||
     value === "triaged" ||
@@ -283,9 +279,7 @@ function isCorrectionStatus(
 
 function isResolvedStatus(status: CorrectionReportStatus) {
   return (
-    status === "accepted" ||
-    status === "rejected" ||
-    status === "duplicate"
+    status === "accepted" || status === "rejected" || status === "duplicate"
   );
 }
 
@@ -296,6 +290,7 @@ function getNextCorrectionStatus(
     case "triage":
       return "triaged";
     case "hold":
+    case "request-more-info":
       return "in-review";
     case "approve":
       return "accepted";

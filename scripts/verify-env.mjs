@@ -41,7 +41,7 @@ if (errors.length > 0) {
 console.log(
   deployMode
     ? "[env] deployment environment contract passed"
-    : "[env] local environment contract passed (Supabase may use local fallback)",
+    : "[env] local environment contract passed",
 );
 
 function validateHttpsUrl(name) {

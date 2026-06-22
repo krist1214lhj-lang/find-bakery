@@ -45,6 +45,9 @@ const requiredFragments = [
   "menu_price_requires_check_date",
   "special_schedule_range",
   "search_aliases text[] not null default '{}'",
+  "(select auth.role()) = 'service_role'",
+  ") to authenticated, service_role",
+  "review_action_actor_required",
 ];
 
 const errors = [];

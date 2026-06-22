@@ -369,12 +369,16 @@ create table public.correction_reports (
 create table public.review_actions (
   id uuid primary key default gen_random_uuid(),
   report_id uuid not null references public.correction_reports(id) on delete cascade,
-  reviewer_id uuid not null references auth.users(id) on delete restrict,
+  reviewer_id uuid references auth.users(id) on delete restrict,
+  reviewer_label text not null default 'authenticated_reviewer',
   action public.review_action_type not null,
   reason text not null check (char_length(reason) between 5 and 1000),
   previous_status public.correction_status not null,
   next_status public.correction_status not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint review_action_actor_required check (
+    reviewer_id is not null or reviewer_label = 'server_service'
+  )
 );
 
 create index bakery_locations_brand_id_idx
@@ -447,12 +451,14 @@ stable
 security definer
 set search_path = ''
 as $$
-  select exists (
-    select 1
-    from public.user_roles
-    where user_id = (select auth.uid())
-      and role in ('reviewer', 'admin')
-  );
+  select
+    (select auth.role()) = 'service_role'
+    or exists (
+      select 1
+      from public.user_roles
+      where user_id = (select auth.uid())
+        and role in ('reviewer', 'admin')
+    );
 $$;
 
 revoke all on function private.is_reviewer() from public;
@@ -521,6 +527,7 @@ begin
   insert into public.review_actions (
     report_id,
     reviewer_id,
+    reviewer_label,
     action,
     reason,
     previous_status,
@@ -529,6 +536,10 @@ begin
   values (
     report_id,
     (select auth.uid()),
+    case
+      when (select auth.role()) = 'service_role' then 'server_service'
+      else 'authenticated_reviewer'
+    end,
     review_action,
     trim(review_reason),
     previous_status,
@@ -548,7 +559,7 @@ grant execute on function public.review_correction_report(
   uuid,
   public.review_action_type,
   text
-) to authenticated;
+) to authenticated, service_role;
 
 alter table public.bakery_brands enable row level security;
 alter table public.bakery_locations enable row level security;

@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { BakeryCard } from "@/components/bakery-card";
-import { breadCategories, getRecentlyVerifiedBakeries } from "@/lib/bakeries";
+import {
+  getBreadCategories,
+  getRecentlyVerifiedBakeries,
+} from "@/lib/bakery-repository";
 
-export default function HomePage() {
-  const recentBakeries = getRecentlyVerifiedBakeries(3);
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const [breadCategories, recentBakeries] = await Promise.all([
+    getBreadCategories(),
+    getRecentlyVerifiedBakeries(3),
+  ]);
 
   return (
     <div className="home-snap">

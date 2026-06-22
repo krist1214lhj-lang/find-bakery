@@ -261,14 +261,15 @@ CorrectionReport 1 ── N ReviewAction
 
 관리자 검수 이력이다.
 
-| 필드         | 타입        | 필수 | 설명                                                                         |
-| ------------ | ----------- | ---: | ---------------------------------------------------------------------------- |
-| `id`         | UUID        |    O | 식별자                                                                       |
-| `reportId`   | UUID        |    O | 제보                                                                         |
-| `reviewerId` | UUID        |    O | 검수자                                                                       |
-| `action`     | enum        |    O | `triage`, `approve`, `reject`, `hold`, `mark_duplicate`, `request_more_info` |
-| `reason`     | text        |    O | 판단 근거                                                                    |
-| `createdAt`  | timestamptz |    O | 처리 시각                                                                    |
+| 필드            | 타입        | 필수 | 설명                                                                         |
+| --------------- | ----------- | ---: | ---------------------------------------------------------------------------- |
+| `id`            | UUID        |    O | 식별자                                                                       |
+| `reportId`      | UUID        |    O | 제보                                                                         |
+| `reviewerId`    | UUID        |    X | 로그인 검수자. 서버 작업이면 null                                            |
+| `reviewerLabel` | text        |    O | `authenticated_reviewer`, `server_service` 등 감사 주체                      |
+| `action`        | enum        |    O | `triage`, `approve`, `reject`, `hold`, `mark_duplicate`, `request_more_info` |
+| `reason`        | text        |    O | 판단 근거                                                                    |
+| `createdAt`     | timestamptz |    O | 처리 시각                                                                    |
 
 ## 4. 검증 등급 계산 초안
 
