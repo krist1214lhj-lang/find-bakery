@@ -1329,6 +1329,51 @@ a {
   padding: 0 12px;
 }
 
+.candidate-panel-heading {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.candidate-panel-heading p {
+  color: var(--cocoa-600);
+  margin-bottom: 0;
+}
+
+.candidate-panel-heading button {
+  background: var(--crust-600);
+  border: 0;
+  border-radius: 11px;
+  color: white;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 14px;
+}
+
+.candidate-match-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.candidate-match-list li {
+  background: var(--flour-0);
+  border: 1px solid var(--flour-200);
+  border-radius: 12px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.candidate-match-list small {
+  color: var(--cocoa-600);
+}
+
 .review-history {
   border-top: 1px solid var(--flour-200);
   margin-top: 32px;

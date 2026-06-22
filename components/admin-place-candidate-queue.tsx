@@ -7,6 +7,7 @@ import type {
   StoredPlaceCandidateReviewAction,
   StoredPlaceCandidateStatus,
 } from "@/lib/place-provider";
+import type { StoreRegistryMatch } from "@/lib/store-registry-provider";
 
 type CandidateQueue = {
   candidates: StoredPlaceCandidate[];
@@ -35,6 +36,10 @@ export function AdminPlaceCandidateQueue({ initialQueue }: Props) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [crossChecking, setCrossChecking] = useState(false);
+  const [registryMatches, setRegistryMatches] = useState<StoreRegistryMatch[]>(
+    [],
+  );
 
   const candidate =
     queue.candidates.find((item) => item.id === selectedId) ??
@@ -93,6 +98,47 @@ export function AdminPlaceCandidateQueue({ initialQueue }: Props) {
     }
   }
 
+  async function crossCheck() {
+    if (!candidate || crossChecking) {
+      return;
+    }
+
+    setCrossChecking(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(
+        `/api/admin/candidates/${candidate.id}/cross-check`,
+        { method: "POST" },
+      );
+      const payload = (await response.json().catch(() => null)) as {
+        matches?: StoreRegistryMatch[];
+        message?: string;
+      } | null;
+      if (!response.ok || !payload?.matches) {
+        throw new Error(
+          payload?.message ?? "공공데이터 교차 확인에 실패했어요.",
+        );
+      }
+
+      setRegistryMatches(payload.matches);
+      setMessage(
+        payload.matches.length > 0
+          ? `공공 상가정보에서 일치 후보 ${payload.matches.length}건을 찾았어요.`
+          : "공공 상가정보에서 강한 일치 후보를 찾지 못했어요.",
+      );
+    } catch (cause) {
+      setRegistryMatches([]);
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "공공데이터 교차 확인에 실패했어요.",
+      );
+    } finally {
+      setCrossChecking(false);
+    }
+  }
+
   if (!candidate) {
     return (
       <div className="empty-state">
@@ -132,6 +178,7 @@ export function AdminPlaceCandidateQueue({ initialQueue }: Props) {
               setDuplicateLocationId("");
               setMessage("");
               setError("");
+              setRegistryMatches([]);
             }}
             type="button"
           >
@@ -216,6 +263,31 @@ export function AdminPlaceCandidateQueue({ initialQueue }: Props) {
           ) : (
             <p>상호·주소·전화·좌표 기준으로 강한 중복 후보가 없습니다.</p>
           )}
+        </div>
+
+        <div className="candidate-duplicate-panel">
+          <div className="candidate-panel-heading">
+            <div>
+              <h3>소상공인 상가정보 교차 확인</h3>
+              <p>상호·주소·좌표와 제과·제빵 업종을 독립 출처에서 비교합니다.</p>
+            </div>
+            <button disabled={crossChecking} onClick={crossCheck} type="button">
+              {crossChecking ? "확인 중…" : "공공데이터 확인"}
+            </button>
+          </div>
+          {registryMatches.length > 0 ? (
+            <ol className="candidate-match-list">
+              {registryMatches.map((match) => (
+                <li key={match.externalId}>
+                  <strong>
+                    {match.name} · {match.score}점
+                  </strong>
+                  <span>{match.roadAddress ?? match.lotAddress}</span>
+                  <small>{match.reasons.join(" · ")}</small>
+                </li>
+              ))}
+            </ol>
+          ) : null}
         </div>
 
         {resolved ? (

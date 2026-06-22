@@ -58,6 +58,11 @@ export async function getAdminPlaceCandidateQueue(): Promise<AdminPlaceCandidate
   };
 }
 
+export async function getAdminPlaceCandidate(candidateId: string) {
+  const queue = await getAdminPlaceCandidateQueue();
+  return queue.candidates.find((candidate) => candidate.id === candidateId);
+}
+
 export async function reviewAdminPlaceCandidate(
   candidateId: string,
   action: PlaceCandidateReviewAction,
@@ -69,11 +74,12 @@ export async function reviewAdminPlaceCandidate(
     throw new Error("Supabase 관리자 설정이 필요합니다.");
   }
 
-  const args: Database["public"]["Functions"]["review_place_candidate"]["Args"] = {
-    candidate_id: candidateId,
-    review_action: toDatabaseReviewAction(action),
-    review_reason: reason.trim(),
-  };
+  const args: Database["public"]["Functions"]["review_place_candidate"]["Args"] =
+    {
+      candidate_id: candidateId,
+      review_action: toDatabaseReviewAction(action),
+      review_reason: reason.trim(),
+    };
   if (matchedLocationId) {
     args.duplicate_location_id = matchedLocationId;
   }
