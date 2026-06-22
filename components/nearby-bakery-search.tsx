@@ -1,19 +1,83 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { PlaceCandidate, PlaceSearchResult } from "@/lib/place-provider";
 
 type NearbyBakerySearchProps = {
+  autoSearch?: boolean;
   initialQuery?: string;
 };
 
 export function NearbyBakerySearch({
+  autoSearch = false,
   initialQuery = "",
 }: NearbyBakerySearchProps) {
   const [query, setQuery] = useState(initialQuery);
   const [places, setPlaces] = useState<PlaceCandidate[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const autoSearchStarted = useRef(false);
+
+  const searchPlaces = useCallback(
+    async (
+      searchQuery: string,
+      coordinates?: { latitude: number; longitude: number },
+    ) => {
+      const normalizedQuery = searchQuery.trim();
+      if (!normalizedQuery) {
+        setMessage("동네나 빵집 이름을 입력해 주세요.");
+        return;
+      }
+
+      setLoading(true);
+      setMessage("");
+      try {
+        const params = new URLSearchParams({ q: normalizedQuery });
+        if (coordinates) {
+          params.set("lat", String(coordinates.latitude));
+          params.set("lon", String(coordinates.longitude));
+        }
+
+        const response = await fetch(`/api/places/search?${params}`);
+        const payload = (await response.json().catch(() => null)) as
+          | (PlaceSearchResult & { message?: string })
+          | { message?: string }
+          | null;
+
+        if (!response.ok || !payload || !("places" in payload)) {
+          throw new Error(payload?.message ?? "주변 빵집을 검색하지 못했어요.");
+        }
+
+        setPlaces(payload.places);
+        setMessage(
+          payload.places.length === 0
+            ? "조건에 맞는 카카오 장소를 찾지 못했어요."
+            : coordinates
+              ? `현재 위치 주변 ${payload.places.length}곳을 찾았어요.`
+              : `카카오 장소 ${payload.places.length}곳을 찾았어요.`,
+        );
+      } catch (cause) {
+        setPlaces([]);
+        setMessage(
+          cause instanceof Error
+            ? cause.message
+            : "주변 빵집을 검색하지 못했어요.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!autoSearch || !initialQuery.trim() || autoSearchStarted.current) {
+      return;
+    }
+
+    autoSearchStarted.current = true;
+    void searchPlaces(initialQuery);
+  }, [autoSearch, initialQuery, searchPlaces]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,53 +107,6 @@ export function NearbyBakerySearch({
       },
       { enableHighAccuracy: false, timeout: 8_000, maximumAge: 300_000 },
     );
-  }
-
-  async function searchPlaces(
-    searchQuery: string,
-    coordinates?: { latitude: number; longitude: number },
-  ) {
-    const normalizedQuery = searchQuery.trim();
-    if (!normalizedQuery) {
-      setMessage("동네나 빵집 이름을 입력해 주세요.");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-    try {
-      const params = new URLSearchParams({ q: normalizedQuery });
-      if (coordinates) {
-        params.set("lat", String(coordinates.latitude));
-        params.set("lon", String(coordinates.longitude));
-      }
-
-      const response = await fetch(`/api/places/search?${params}`);
-      const payload = (await response.json().catch(() => null)) as
-        | (PlaceSearchResult & { message?: string })
-        | { message?: string }
-        | null;
-
-      if (!response.ok || !payload || !("places" in payload)) {
-        throw new Error(payload?.message ?? "주변 빵집을 검색하지 못했어요.");
-      }
-
-      setPlaces(payload.places);
-      setMessage(
-        coordinates
-          ? `현재 위치 주변 ${payload.places.length}곳을 찾았어요.`
-          : `카카오 장소 ${payload.places.length}곳을 찾았어요.`,
-      );
-    } catch (cause) {
-      setPlaces([]);
-      setMessage(
-        cause instanceof Error
-          ? cause.message
-          : "주변 빵집을 검색하지 못했어요.",
-      );
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (

@@ -25,6 +25,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const selectedCategory = breadCategories.find(
     (category) => category.slug === query.category,
   );
+  const hasSearchQuery = Boolean(query.q?.trim());
   const title = query.q
     ? `'${query.q}' 검색 결과`
     : query.region
@@ -61,8 +62,12 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       </div>
 
       <div className="result-summary">
-        <strong>{results.length}곳</strong>
-        <span>Supabase 공개 데이터 기준</span>
+        <strong>검증 완료 {results.length}곳</strong>
+        <span>
+          {hasSearchQuery
+            ? "카카오 미검증 후보도 함께 찾습니다"
+            : "Supabase 공개 데이터 기준"}
+        </span>
       </div>
 
       {results.length > 0 ? (
@@ -71,7 +76,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             <BakeryCard bakery={bakery} key={bakery.id} />
           ))}
         </div>
-      ) : (
+      ) : !hasSearchQuery ? (
         <div className="empty-state">
           <span aria-hidden="true">🥐</span>
           <h2>조건에 맞는 빵집이 아직 없어요.</h2>
@@ -80,9 +85,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             필터 초기화
           </Link>
         </div>
-      )}
+      ) : null}
 
-      <NearbyBakerySearch initialQuery={query.q} />
+      <NearbyBakerySearch autoSearch={hasSearchQuery} initialQuery={query.q} />
     </section>
   );
 }

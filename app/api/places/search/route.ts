@@ -32,10 +32,21 @@ export async function GET(request: Request) {
     });
   } catch (cause) {
     if (cause instanceof PlaceProviderError) {
+      if (cause.code === "PROVIDER_EMPTY_RESULT") {
+        return NextResponse.json(
+          {
+            places: [],
+            totalCount: 0,
+            isEnd: true,
+            message: cause.message,
+          },
+          { headers: { "Cache-Control": "private, max-age=60" } },
+        );
+      }
+
       const status = {
         PROVIDER_UNAUTHORIZED: 502,
         PROVIDER_RATE_LIMITED: 429,
-        PROVIDER_EMPTY_RESULT: 404,
         PROVIDER_TIMEOUT: 504,
         PROVIDER_INVALID_RESPONSE: 502,
         PROVIDER_UNAVAILABLE: 503,
