@@ -16,6 +16,8 @@ export function NearbyBakerySearch({
   const [places, setPlaces] = useState<PlaceCandidate[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [capturingId, setCapturingId] = useState("");
+  const [capturedIds, setCapturedIds] = useState<string[]>([]);
   const autoSearchStarted = useRef(false);
 
   const searchPlaces = useCallback(
@@ -109,6 +111,45 @@ export function NearbyBakerySearch({
     );
   }
 
+  async function captureCandidate(place: PlaceCandidate) {
+    if (!place.captureToken || capturingId) {
+      return;
+    }
+
+    setCapturingId(place.externalId);
+    setMessage("");
+    try {
+      const response = await fetch("/api/place-candidates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: place.captureToken }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      if (!response.ok) {
+        throw new Error(payload?.message ?? "검수 요청을 저장하지 못했어요.");
+      }
+
+      setCapturedIds((current) =>
+        current.includes(place.externalId)
+          ? current
+          : [...current, place.externalId],
+      );
+      setMessage(
+        `${place.name}을 검수 대기 목록에 저장했어요. 승인 전에는 확정 정보로 공개되지 않아요.`,
+      );
+    } catch (cause) {
+      setMessage(
+        cause instanceof Error
+          ? cause.message
+          : "검수 요청을 저장하지 못했어요.",
+      );
+    } finally {
+      setCapturingId("");
+    }
+  }
+
   return (
     <section className="nearby-search" aria-labelledby="nearby-search-title">
       <div>
@@ -151,7 +192,13 @@ export function NearbyBakerySearch({
       {places.length > 0 ? (
         <div className="place-candidate-grid">
           {places.map((place) => (
-            <PlaceCandidateCard key={place.externalId} place={place} />
+            <PlaceCandidateCard
+              captured={capturedIds.includes(place.externalId)}
+              capturing={capturingId === place.externalId}
+              key={place.externalId}
+              onCapture={captureCandidate}
+              place={place}
+            />
           ))}
         </div>
       ) : null}
@@ -159,7 +206,17 @@ export function NearbyBakerySearch({
   );
 }
 
-function PlaceCandidateCard({ place }: { place: PlaceCandidate }) {
+function PlaceCandidateCard({
+  captured,
+  capturing,
+  onCapture,
+  place,
+}: {
+  captured: boolean;
+  capturing: boolean;
+  onCapture: (place: PlaceCandidate) => void;
+  place: PlaceCandidate;
+}) {
   return (
     <article className="place-candidate-card">
       <div className="place-candidate-heading">
@@ -174,6 +231,13 @@ function PlaceCandidateCard({ place }: { place: PlaceCandidate }) {
       <p>{place.roadAddress ?? place.address}</p>
       <small>{place.category}</small>
       <div className="place-candidate-actions">
+        <button
+          disabled={captured || capturing || !place.captureToken}
+          onClick={() => onCapture(place)}
+          type="button"
+        >
+          {captured ? "검수 요청됨" : capturing ? "저장 중…" : "검수 요청"}
+        </button>
         {place.phone ? <a href={`tel:${place.phone}`}>전화</a> : null}
         <a href={place.placeUrl} rel="noreferrer" target="_blank">
           카카오맵에서 확인 ↗

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchKakaoPlaces } from "@/lib/kakao-local";
+import { signPlaceCandidate } from "@/lib/place-candidate-token";
 import { PlaceProviderError } from "@/lib/place-provider";
 
 export const dynamic = "force-dynamic";
@@ -27,9 +28,18 @@ export async function GET(request: Request) {
       latitude,
       longitude,
     });
-    return NextResponse.json(result, {
-      headers: { "Cache-Control": "private, max-age=60" },
-    });
+    return NextResponse.json(
+      {
+        ...result,
+        places: result.places.map((place) => ({
+          ...place,
+          captureToken: signPlaceCandidate(place),
+        })),
+      },
+      {
+        headers: { "Cache-Control": "private, max-age=60" },
+      },
+    );
   } catch (cause) {
     if (cause instanceof PlaceProviderError) {
       if (cause.code === "PROVIDER_EMPTY_RESULT") {

@@ -18,6 +18,55 @@ export type PlaceCandidate = {
   placeUrl: string;
   distanceMeters?: number;
   retrievedAt: string;
+  captureToken?: string;
+};
+
+export type StoredPlaceCandidateStatus =
+  | "discovered"
+  | "in-review"
+  | "approved"
+  | "rejected"
+  | "duplicate";
+
+export type StoredPlaceCandidate = Omit<
+  PlaceCandidate,
+  "captureToken" | "distanceMeters"
+> & {
+  id: string;
+  status: StoredPlaceCandidateStatus;
+  regionLevel1: string;
+  regionLevel2: string;
+  regionLevel3?: string;
+  matchedLocationId?: string;
+  approvedLocationId?: string;
+  createdAt: string;
+  reviewedAt?: string;
+  possibleDuplicates: PlaceCandidateDuplicate[];
+};
+
+export type PlaceCandidateDuplicate = {
+  locationId: string;
+  name: string;
+  roadAddress: string;
+  score: number;
+  reasons: string[];
+};
+
+export type PlaceCandidateReviewAction =
+  | "hold"
+  | "approve"
+  | "reject"
+  | "mark-duplicate";
+
+export type StoredPlaceCandidateReviewAction = {
+  id: string;
+  candidateId: string;
+  action: PlaceCandidateReviewAction;
+  reason: string;
+  previousStatus: StoredPlaceCandidateStatus;
+  nextStatus: StoredPlaceCandidateStatus;
+  matchedLocationId?: string;
+  createdAt: string;
 };
 
 export type PlaceSearchResult = {

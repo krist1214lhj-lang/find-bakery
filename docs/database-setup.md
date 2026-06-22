@@ -59,6 +59,19 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - `npx supabase db reset`으로 빈 DB에서 마이그레이션·전체 시드 적용 성공
 - 지점 3개, 영업시간 21개, 메뉴 6개, 출처·검증·유명세 근거 각 3개 생성
 - 서버 제보 → 관리자 큐 → 검수 RPC 승인 → 감사 이력 흐름 통과
+- 장소 후보·후보 검수 감사 테이블과 `review_place_candidate` RPC 마이그레이션 적용 성공
+- 전체 17개 RLS 테이블 계약과 PostgreSQL 스키마 린트 오류 0건
+
+장소 후보 검수 흐름:
+
+1. 카카오 검색 결과의 서버 서명 토큰 검증
+2. `place_candidates`에 `provider + external_id` 기준 멱등 저장
+3. 기존 지점과 상호·주소·전화·좌표 중복 점수 계산
+4. 관리자 보류·반려·중복·승인
+5. 승인 시 브랜드·지점·지도 출처·C등급 검증 기록을 원자적으로 생성
+6. 중복 시 새 지점을 만들지 않고 기존 지점 연결과 감사 기록만 보존
+
+2026-06-22 현재 마이그레이션 적용·DB 린트·타입 생성은 통과했다. 실제 브라우저 후보 저장→승인 통합 검증은 실행 도구 승인 한도로 인해 대기 중이다.
 
 ## 원격 테스트 프로젝트 연결
 
@@ -102,6 +115,6 @@ npm run verify:deploy-env
 
 1. `lib/supabase/database.types.ts` 갱신
 2. API 및 저장소 타입 검사
-3. `npm run verify:schema`
+3. `npm run verify:schema` — 모든 마이그레이션의 RLS·RPC 계약 검사
 4. `npm run typecheck`
 5. 제보·검수 상태 전이 테스트

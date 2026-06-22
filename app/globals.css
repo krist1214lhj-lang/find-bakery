@@ -591,7 +591,8 @@ a {
 }
 
 .nearby-search-form button,
-.place-candidate-actions a {
+.place-candidate-actions a,
+.place-candidate-actions button {
   align-items: center;
   background: var(--crust-600);
   border: 0;
@@ -671,9 +672,19 @@ a {
   margin-top: auto;
 }
 
-.place-candidate-actions a {
+.place-candidate-actions a,
+.place-candidate-actions button {
   min-height: 42px;
   padding: 0 13px;
+}
+
+.place-candidate-actions button {
+  border: 0;
+}
+
+.place-candidate-actions button:disabled {
+  cursor: default;
+  opacity: 0.62;
 }
 
 .detail-page {
@@ -1288,6 +1299,34 @@ a {
 .review-complete-note {
   background: var(--flour-100);
   color: var(--cocoa-600);
+}
+
+.candidate-duplicate-panel {
+  background: var(--flour-100);
+  border: 1px solid var(--flour-200);
+  border-radius: 16px;
+  margin: 22px 0;
+  padding: 18px;
+}
+
+.candidate-duplicate-panel h3 {
+  margin-top: 0;
+}
+
+.candidate-duplicate-panel label {
+  display: grid;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.candidate-duplicate-panel select {
+  background: var(--flour-0);
+  border: 1px solid var(--flour-200);
+  border-radius: 12px;
+  color: var(--cocoa-900);
+  font: inherit;
+  min-height: 46px;
+  padding: 0 12px;
 }
 
 .review-history {

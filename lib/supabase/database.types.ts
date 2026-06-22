@@ -491,6 +491,150 @@ export type Database = {
           },
         ];
       };
+      place_candidate_review_actions: {
+        Row: {
+          action: Database["public"]["Enums"]["place_candidate_review_action"];
+          candidate_id: string;
+          created_at: string;
+          id: string;
+          matched_location_id: string | null;
+          next_status: Database["public"]["Enums"]["place_candidate_status"];
+          previous_status: Database["public"]["Enums"]["place_candidate_status"];
+          reason: string;
+          reviewer_id: string | null;
+          reviewer_label: string;
+        };
+        Insert: {
+          action: Database["public"]["Enums"]["place_candidate_review_action"];
+          candidate_id: string;
+          created_at?: string;
+          id?: string;
+          matched_location_id?: string | null;
+          next_status: Database["public"]["Enums"]["place_candidate_status"];
+          previous_status: Database["public"]["Enums"]["place_candidate_status"];
+          reason: string;
+          reviewer_id?: string | null;
+          reviewer_label?: string;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["place_candidate_review_action"];
+          candidate_id?: string;
+          created_at?: string;
+          id?: string;
+          matched_location_id?: string | null;
+          next_status?: Database["public"]["Enums"]["place_candidate_status"];
+          previous_status?: Database["public"]["Enums"]["place_candidate_status"];
+          reason?: string;
+          reviewer_id?: string | null;
+          reviewer_label?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "place_candidate_review_actions_candidate_id_fkey";
+            columns: ["candidate_id"];
+            isOneToOne: false;
+            referencedRelation: "place_candidates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "place_candidate_review_actions_matched_location_id_fkey";
+            columns: ["matched_location_id"];
+            isOneToOne: false;
+            referencedRelation: "bakery_locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      place_candidates: {
+        Row: {
+          address: string;
+          approved_location_id: string | null;
+          category: string;
+          created_at: string;
+          external_id: string;
+          first_seen_at: string;
+          id: string;
+          last_seen_at: string;
+          latitude: number;
+          longitude: number;
+          matched_location_id: string | null;
+          name: string;
+          phone: string | null;
+          place_url: string;
+          provider: string;
+          region_level_1: string;
+          region_level_2: string;
+          region_level_3: string | null;
+          reviewed_at: string | null;
+          road_address: string | null;
+          status: Database["public"]["Enums"]["place_candidate_status"];
+          updated_at: string;
+        };
+        Insert: {
+          address: string;
+          approved_location_id?: string | null;
+          category: string;
+          created_at?: string;
+          external_id: string;
+          first_seen_at?: string;
+          id?: string;
+          last_seen_at?: string;
+          latitude: number;
+          longitude: number;
+          matched_location_id?: string | null;
+          name: string;
+          phone?: string | null;
+          place_url: string;
+          provider: string;
+          region_level_1: string;
+          region_level_2: string;
+          region_level_3?: string | null;
+          reviewed_at?: string | null;
+          road_address?: string | null;
+          status?: Database["public"]["Enums"]["place_candidate_status"];
+          updated_at?: string;
+        };
+        Update: {
+          address?: string;
+          approved_location_id?: string | null;
+          category?: string;
+          created_at?: string;
+          external_id?: string;
+          first_seen_at?: string;
+          id?: string;
+          last_seen_at?: string;
+          latitude?: number;
+          longitude?: number;
+          matched_location_id?: string | null;
+          name?: string;
+          phone?: string | null;
+          place_url?: string;
+          provider?: string;
+          region_level_1?: string;
+          region_level_2?: string;
+          region_level_3?: string | null;
+          reviewed_at?: string | null;
+          road_address?: string | null;
+          status?: Database["public"]["Enums"]["place_candidate_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "place_candidates_approved_location_id_fkey";
+            columns: ["approved_location_id"];
+            isOneToOne: false;
+            referencedRelation: "bakery_locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "place_candidates_matched_location_id_fkey";
+            columns: ["matched_location_id"];
+            isOneToOne: false;
+            referencedRelation: "bakery_locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       review_actions: {
         Row: {
           action: Database["public"]["Enums"]["review_action_type"];
@@ -802,6 +946,44 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      review_place_candidate: {
+        Args: {
+          candidate_id: string;
+          duplicate_location_id?: string;
+          review_action: Database["public"]["Enums"]["place_candidate_review_action"];
+          review_reason: string;
+        };
+        Returns: {
+          address: string;
+          approved_location_id: string | null;
+          category: string;
+          created_at: string;
+          external_id: string;
+          first_seen_at: string;
+          id: string;
+          last_seen_at: string;
+          latitude: number;
+          longitude: number;
+          matched_location_id: string | null;
+          name: string;
+          phone: string | null;
+          place_url: string;
+          provider: string;
+          region_level_1: string;
+          region_level_2: string;
+          region_level_3: string | null;
+          reviewed_at: string | null;
+          road_address: string | null;
+          status: Database["public"]["Enums"]["place_candidate_status"];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "place_candidates";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
       account_officiality:
@@ -857,6 +1039,17 @@ export type Database = {
         | "unknown"
         | "discontinued";
       menu_status: "active" | "hidden" | "discontinued";
+      place_candidate_review_action:
+        | "hold"
+        | "approve"
+        | "reject"
+        | "mark_duplicate";
+      place_candidate_status:
+        | "discovered"
+        | "in_review"
+        | "approved"
+        | "rejected"
+        | "duplicate";
       resource_status:
         | "active"
         | "accessible"
@@ -1103,6 +1296,19 @@ export const Constants = {
         "discontinued",
       ],
       menu_status: ["active", "hidden", "discontinued"],
+      place_candidate_review_action: [
+        "hold",
+        "approve",
+        "reject",
+        "mark_duplicate",
+      ],
+      place_candidate_status: [
+        "discovered",
+        "in_review",
+        "approved",
+        "rejected",
+        "duplicate",
+      ],
       resource_status: [
         "active",
         "accessible",

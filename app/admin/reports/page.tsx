@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminReviewQueue } from "@/components/admin-review-queue";
 import {
@@ -28,6 +29,7 @@ export default async function AdminReportsPage() {
           Supabase에 접수된 제보를 확인하고 검수 RPC로 상태와 감사 이력을 함께
           변경합니다.
         </p>
+        <Link href="/admin/candidates">외부 장소 후보 검수 →</Link>
       </div>
       <AdminReviewQueue initialQueue={queue} />
     </section>

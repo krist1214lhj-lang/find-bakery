@@ -24,6 +24,7 @@
 | R-016 | 부분 | 외부 지도 길찾기                 | 상세             | 공급자 URL 생성기                                                              | 카카오맵 링크 구현; URL 생성 단위 테스트 미구현                                                              |
 | R-017 | 예정 | 폐점·이전 이력 보존              | 상세·관리자      | Location status, 변경 이력                                                     | 논리 모델만 존재                                                                                             |
 | R-018 | 부분 | 테스트 배포                      | 베타 전체        | 환경 변수·배포 설정                                                            | 로컬 production build·배포 환경 계약 구현; 원격 미리보기 미배포                                              |
+| R-019 | 부분 | 외부 후보 검수·정식 등록         | 탐색·관리자      | PlaceCandidate, PlaceCandidateReviewAction, Source, VerificationRecord         | 서명 후보 저장·중복 점수·승인 RPC·관리자 UI 구현; 실제 후보 저장→승인 브라우저 통합 검증 대기                |
 
 ## 구현 중 갱신 규칙
 

@@ -23,6 +23,8 @@ BakeryLocation 1 ── N MenuItem
 BakeryLocation N ── N BreadCategory
 BakeryLocation 1 ── N ExternalAccount
 BakeryLocation 1 ── N FameEvidence
+PlaceCandidate 0..1 ── 1 BakeryLocation
+PlaceCandidate 1 ── N PlaceCandidateReviewAction
 
 Source 1 ── N VerificationRecord
 VerificationRecord N ── 1 BakeryLocation
@@ -84,6 +86,48 @@ CorrectionReport 1 ── N ReviewAction
 주소·좌표·전화번호 같은 값은 현재 조회 성능을 위해 지점에 보관하되, 각 값의 신뢰 근거는 `VerificationRecord`에서 추적한다.
 
 외국어 상호의 한글 검색은 자동 번역이나 임의 음역에 의존하지 않고 `searchAliases`에 검수된 한글 표기, 공식 영문명, 통용 표기를 저장한다. 검색 시 대소문자·공백·일반 기호 차이는 정규화하되 서로 다른 브랜드를 자동 병합하지 않는다.
+
+### PlaceCandidate
+
+카카오 등 외부 공급자에서 발견한 장소를 정식 지점과 분리해 보관한다.
+
+| 필드                 | 타입        | 필수 | 설명                                                           |
+| -------------------- | ----------- | ---: | -------------------------------------------------------------- |
+| `id`                 | UUID        |    O | 내부 식별자                                                    |
+| `provider`           | text        |    O | 현재 `kakao`                                                   |
+| `externalId`         | text        |    O | 공급자 장소 ID                                                 |
+| `name`               | text        |    O | 공급자 상호                                                    |
+| `address`            | text        |    O | 지번 주소                                                      |
+| `roadAddress`        | text        |    X | 도로명 주소                                                    |
+| `phone`              | text        |    X | 공급자 전화번호                                                |
+| `latitude/longitude` | decimal     |    O | WGS84 좌표                                                     |
+| `placeUrl`           | URL         |    O | 공급자 원문                                                    |
+| `status`             | enum        |    O | `discovered`, `in_review`, `approved`, `rejected`, `duplicate` |
+| `matchedLocationId`  | UUID        |    X | 중복 처리한 기존 지점                                          |
+| `approvedLocationId` | UUID        |    X | 승인으로 생성된 정식 지점                                      |
+| `firstSeenAt`        | timestamptz |    O | 최초 수집 시각                                                 |
+| `lastSeenAt`         | timestamptz |    O | 마지막 공급자 조회 시각                                        |
+| `reviewedAt`         | timestamptz |    X | 최종 검수 시각                                                 |
+
+`provider + externalId`는 고유하다. 검색 응답의 서버 서명 단기 토큰을 검증한 후보만 저장한다.
+
+승인 시 `BakeryBrand`, `BakeryLocation`, 지도 `Source`, 주소·좌표·전화 `VerificationRecord`를 한 트랜잭션으로 생성한다. 지도 단일 출처만 있는 승인 지점은 `verification_needed`와 C등급으로 공개하며 추가 출처 확인 대상으로 남긴다.
+
+### PlaceCandidateReviewAction
+
+외부 후보의 보류·승인·반려·중복 병합 감사 기록이다.
+
+| 필드                | 타입        | 필수 | 설명                                          |
+| ------------------- | ----------- | ---: | --------------------------------------------- |
+| `candidateId`       | UUID        |    O | 장소 후보                                     |
+| `reviewerId`        | UUID        |    X | 로그인 검수자                                 |
+| `reviewerLabel`     | text        |    O | 서버 작업 포함 감사 주체                      |
+| `action`            | enum        |    O | `hold`, `approve`, `reject`, `mark_duplicate` |
+| `reason`            | text        |    O | 판단 근거                                     |
+| `previousStatus`    | enum        |    O | 변경 전 상태                                  |
+| `nextStatus`        | enum        |    O | 변경 후 상태                                  |
+| `matchedLocationId` | UUID        |    X | 중복 처리 시 연결한 기존 지점                 |
+| `createdAt`         | timestamptz |    O | 처리 시각                                     |
 
 ### BusinessHour
 

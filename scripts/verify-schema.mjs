@@ -1,18 +1,17 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
-const migrationPath = join(
-  root,
-  "supabase",
-  "migrations",
-  "202606180001_initial_schema.sql",
-);
+const migrationsPath = join(root, "supabase", "migrations");
 const seedPath = join(root, "supabase", "seed.sql");
 const bakeryPath = join(root, "lib", "bakeries.ts");
 const databaseTypesPath = join(root, "lib", "supabase", "database.types.ts");
 
-const migration = readFileSync(migrationPath, "utf8");
+const migration = readdirSync(migrationsPath)
+  .filter((name) => name.endsWith(".sql"))
+  .sort()
+  .map((name) => readFileSync(join(migrationsPath, name), "utf8"))
+  .join("\n");
 const seed = readFileSync(seedPath, "utf8");
 const bakeries = readFileSync(bakeryPath, "utf8");
 const databaseTypes = readFileSync(databaseTypesPath, "utf8");
@@ -33,6 +32,8 @@ const rlsTables = [
   "saved_bakeries",
   "correction_reports",
   "review_actions",
+  "place_candidates",
+  "place_candidate_review_actions",
 ];
 
 const requiredFragments = [
@@ -48,6 +49,9 @@ const requiredFragments = [
   "(select auth.role()) = 'service_role'",
   ") to authenticated, service_role",
   "review_action_actor_required",
+  "create or replace function public.review_place_candidate",
+  "place_candidate_resolution",
+  "place_candidate_review_actor_required",
 ];
 
 const errors = [];
@@ -106,6 +110,11 @@ for (const typeName of [
   "review_correction_report",
   "correction_status",
   "review_action_type",
+  "place_candidates",
+  "place_candidate_review_actions",
+  "review_place_candidate",
+  "place_candidate_status",
+  "place_candidate_review_action",
 ]) {
   if (!databaseTypes.includes(typeName)) {
     errors.push(`Database type snapshot is missing: ${typeName}`);
