@@ -71,7 +71,7 @@ export async function searchSbizStores(
   if (response.status === 401 || response.status === 403) {
     throw new StoreRegistryProviderError(
       "PROVIDER_UNAUTHORIZED",
-      "공공데이터포털 인증키를 확인해 주세요.",
+      "공공데이터포털 인증키와 이 API의 활용신청·승인 상태를 확인해 주세요.",
     );
   }
   if (response.status === 429) {
