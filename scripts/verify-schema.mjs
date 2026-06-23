@@ -35,6 +35,7 @@ const rlsTables = [
   "place_candidates",
   "place_candidate_review_actions",
   "place_candidate_evidence",
+  "official_verification_actions",
 ];
 
 const requiredFragments = [
@@ -55,6 +56,8 @@ const requiredFragments = [
   "place_candidate_review_actor_required",
   "create or replace function private.apply_candidate_cross_check",
   "place_candidates_apply_cross_check",
+  "create or replace function public.register_official_verification",
+  "official_verification_actor_required",
 ];
 
 const errors = [];
@@ -119,6 +122,8 @@ for (const typeName of [
   "place_candidate_status",
   "place_candidate_review_action",
   "place_candidate_evidence",
+  "official_verification_actions",
+  "register_official_verification",
 ]) {
   if (!databaseTypes.includes(typeName)) {
     errors.push(`Database type snapshot is missing: ${typeName}`);

@@ -40,6 +40,7 @@ export function BakeryCard({ bakery }: BakeryCardProps) {
           checkedAt={bakery.verification.checkedAt}
           grade={bakery.verification.grade}
           sourceLabel={bakery.verification.sourceLabel}
+          state={bakery.verification.state}
         />
         <small className="checked-copy">
           {formatCheckedDate(bakery.verification.checkedAt)} 확인

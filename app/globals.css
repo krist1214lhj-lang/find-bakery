@@ -1109,6 +1109,23 @@ a {
   line-height: 1.7;
 }
 
+.admin-page-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.admin-page-links a {
+  background: var(--flour-0);
+  border: 1px solid var(--flour-200);
+  border-radius: 999px;
+  color: var(--crust-700);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 9px 13px;
+}
+
 .admin-review-layout {
   background: var(--flour-0);
   border: 1px solid var(--flour-200);
@@ -1207,6 +1224,21 @@ a {
 .status-triaged {
   background: var(--warning-soft);
   color: var(--toast-700);
+}
+
+.status-conflict {
+  background: var(--danger-soft);
+  color: var(--berry-700);
+}
+
+.status-expired {
+  background: var(--warning-soft);
+  color: var(--toast-700);
+}
+
+.status-due-soon {
+  background: var(--status-soft);
+  color: var(--crust-800);
 }
 
 .report-facts {
@@ -1413,6 +1445,248 @@ a {
   font-size: 11px;
 }
 
+.official-verification-layout {
+  align-items: start;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.75fr);
+  margin-top: 36px;
+}
+
+.official-verification-form,
+.official-verification-history {
+  background: var(--flour-0);
+  border: 1px solid var(--flour-200);
+  border-radius: 24px;
+  padding: clamp(22px, 4vw, 38px);
+}
+
+.verification-grade {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 8px 12px;
+}
+
+.verification-form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 30px 0 22px;
+}
+
+.verification-form-grid label {
+  display: grid;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.verification-form-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.verification-form-grid input,
+.verification-form-grid select,
+.verification-form-grid textarea {
+  background: var(--cream-50);
+  border: 1px solid var(--flour-200);
+  border-radius: 12px;
+  color: var(--cocoa-900);
+  font: inherit;
+  min-height: 46px;
+  padding: 11px 13px;
+  width: 100%;
+}
+
+.verification-form-grid textarea {
+  resize: vertical;
+}
+
+.verification-form-grid input:focus,
+.verification-form-grid select:focus,
+.verification-form-grid textarea:focus {
+  border-color: var(--crust-600);
+  box-shadow: 0 0 0 3px rgb(169 81 34 / 12%);
+  outline: 0;
+}
+
+.current-verification-value {
+  background: var(--flour-100);
+  border: 1px solid var(--flour-200);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.current-verification-value p {
+  color: var(--cocoa-900);
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+.current-verification-value small {
+  color: var(--cocoa-600);
+  line-height: 1.5;
+}
+
+.primary-action {
+  background: var(--fresh-700);
+  border: 0;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 48px;
+  padding: 13px 18px;
+  width: 100%;
+}
+
+.primary-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.official-verification-history {
+  max-height: 820px;
+  overflow-y: auto;
+  position: sticky;
+  top: 24px;
+}
+
+.official-verification-history ol {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.official-verification-history li {
+  border: 1px solid var(--flour-200);
+  border-radius: 16px;
+  display: grid;
+  gap: 7px;
+  padding: 15px;
+}
+
+.official-verification-history li > div {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+}
+
+.official-verification-history p {
+  line-height: 1.55;
+  margin: 2px 0;
+}
+
+.official-verification-history li > span,
+.official-verification-history small {
+  color: var(--cocoa-600);
+}
+
+.official-verification-history small {
+  font-size: 11px;
+}
+
+.official-verification-history a {
+  color: var(--crust-700);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.empty-state.compact {
+  min-height: 140px;
+  padding: 24px;
+}
+
+.reverification-queue {
+  margin-top: 36px;
+}
+
+.reverification-summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.reverification-summary > div {
+  background: var(--flour-0);
+  border: 1px solid var(--flour-200);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 18px;
+}
+
+.reverification-summary strong {
+  font-size: 30px;
+}
+
+.reverification-summary span {
+  color: var(--cocoa-600);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.reverification-summary .is-conflict {
+  border-color: rgb(153 57 57 / 28%);
+}
+
+.reverification-summary .is-expired {
+  border-color: rgb(171 105 30 / 28%);
+}
+
+.reverification-list {
+  display: grid;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reverification-list > li {
+  background: var(--flour-0);
+  border: 1px solid var(--flour-200);
+  border-radius: 24px;
+  padding: clamp(22px, 4vw, 34px);
+}
+
+.reverification-item-heading {
+  align-items: start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.reverification-item-heading h2 {
+  font-size: clamp(24px, 4vw, 34px);
+  letter-spacing: -0.04em;
+  margin: 12px 0 0;
+}
+
+.primary-link {
+  background: var(--fresh-700);
+  border-radius: 12px;
+  color: white;
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  margin-left: auto;
+  padding: 13px 18px;
+}
+
+.verification-badge.state-due-soon {
+  box-shadow: inset 0 0 0 1px rgb(118 80 47 / 18%);
+}
+
 .bottom-nav {
   display: none;
 }
@@ -1562,6 +1836,35 @@ a {
 
   .admin-review-layout {
     grid-template-columns: 1fr;
+  }
+
+  .official-verification-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .official-verification-history {
+    max-height: none;
+    position: static;
+  }
+
+  .verification-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .verification-form-grid .wide {
+    grid-column: auto;
+  }
+
+  .reverification-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .reverification-list .report-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .primary-link {
+    width: 100%;
   }
 
   .admin-report-list {

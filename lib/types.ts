@@ -1,4 +1,10 @@
 export type VerificationGrade = "A" | "B" | "C" | "D";
+export type VerificationState =
+  | "current"
+  | "due-soon"
+  | "expired"
+  | "conflict"
+  | "unverified";
 export type ImageTone = "gold" | "berry" | "sage";
 export type SpecialScheduleType =
   | "temporary-closed"
@@ -29,6 +35,8 @@ export type CorrectionReviewAction =
 export type VerificationSummary = {
   grade: VerificationGrade;
   checkedAt: string;
+  nextReviewAt: string;
+  state: VerificationState;
   sourceLabel: string;
   sourceUrl?: string;
 };

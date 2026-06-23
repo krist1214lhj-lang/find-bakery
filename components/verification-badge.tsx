@@ -1,9 +1,13 @@
-import type { VerificationGrade } from "@/lib/types";
+import type {
+  VerificationGrade,
+  VerificationState,
+} from "@/lib/types";
 
 type VerificationBadgeProps = {
   grade: VerificationGrade;
   checkedAt: string;
   sourceLabel: string;
+  state: VerificationState;
 };
 
 const gradeLabels: Record<VerificationGrade, string> = {
@@ -17,14 +21,26 @@ export function VerificationBadge({
   grade,
   checkedAt,
   sourceLabel,
+  state,
 }: VerificationBadgeProps) {
+  const label =
+    {
+      current: gradeLabels[grade],
+      "due-soon": "재검토 임박",
+      expired: "확인일 경과",
+      conflict: "출처 충돌",
+      unverified: "재확인 필요",
+    }[state] ?? gradeLabels[grade];
+
   return (
     <span
-      className={`verification-badge grade-${grade.toLowerCase()}`}
+      className={`verification-badge grade-${grade.toLowerCase()} state-${state}`}
       title={`${sourceLabel} · ${checkedAt}`}
     >
-      <span aria-hidden="true">{grade === "D" ? "!" : "✓"}</span>
-      {grade} {gradeLabels[grade]}
+      <span aria-hidden="true">
+        {state === "conflict" || state === "unverified" ? "!" : "✓"}
+      </span>
+      {grade} {label}
     </span>
   );
 }

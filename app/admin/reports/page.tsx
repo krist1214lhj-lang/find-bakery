@@ -29,7 +29,11 @@ export default async function AdminReportsPage() {
           Supabase에 접수된 제보를 확인하고 검수 RPC로 상태와 감사 이력을 함께
           변경합니다.
         </p>
-        <Link href="/admin/candidates">외부 장소 후보 검수 →</Link>
+        <nav className="admin-page-links" aria-label="관리자 화면">
+          <Link href="/admin/reverification">재검증 대기열</Link>
+          <Link href="/admin/candidates">외부 후보</Link>
+          <Link href="/admin/verifications">공식 출처 확인</Link>
+        </nav>
       </div>
       <AdminReviewQueue initialQueue={queue} />
     </section>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SaveButton } from "@/components/save-button";
 import { VerificationBadge } from "@/components/verification-badge";
 import { getBakeryBySlug } from "@/lib/bakery-repository";
+import type { VerificationSummary } from "@/lib/types";
 import { formatCheckedDate, getOperatingStatus } from "@/lib/verification";
 
 type BakeryDetailPageProps = {
@@ -74,11 +75,9 @@ export default async function BakeryDetailPage({
             checkedAt={bakery.verification.checkedAt}
             grade={bakery.verification.grade}
             sourceLabel={bakery.verification.sourceLabel}
+            state={bakery.verification.state}
           />
-          <p>
-            {formatCheckedDate(bakery.verification.checkedAt)}에{" "}
-            {bakery.verification.sourceLabel}에서 영업 정보를 확인했어요.
-          </p>
+          <p>{getVerificationCopy(bakery.verification)}</p>
           {bakery.verification.sourceUrl ? (
             <a
               href={bakery.verification.sourceUrl}
@@ -180,4 +179,21 @@ export default async function BakeryDetailPage({
       </div>
     </article>
   );
+}
+
+function getVerificationCopy(verification: VerificationSummary) {
+  const checkedDate = formatCheckedDate(verification.checkedAt);
+  if (verification.state === "conflict") {
+    return `${checkedDate} 확인 정보가 다른 출처와 충돌해 재검토 중이에요.`;
+  }
+  if (verification.state === "expired") {
+    return `${checkedDate} 확인 정보의 재검토 기한이 지났어요. 방문 전 원문을 다시 확인해 주세요.`;
+  }
+  if (verification.state === "due-soon") {
+    return `${checkedDate}에 ${verification.sourceLabel}에서 확인했으며 곧 재검토할 예정이에요.`;
+  }
+  if (verification.state === "unverified") {
+    return "현재 공개할 수 있는 검증 기록이 없어 확인이 필요해요.";
+  }
+  return `${checkedDate}에 ${verification.sourceLabel}에서 영업 정보를 확인했어요.`;
 }

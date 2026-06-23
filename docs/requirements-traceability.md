@@ -1,6 +1,6 @@
 # 요구사항 추적표
 
-작성 기준일: 2026-06-22
+작성 기준일: 2026-06-23
 
 제품 요구사항이 화면, 데이터, 테스트 중 한 곳에서 빠지는 일을 줄이기 위한 연결 기준이다. 구현이 시작되면 코드 경로와 테스트 이름을 추가한다.
 
@@ -11,12 +11,12 @@
 | R-003 | 부분 | 지역·빵 종류·영업·편의·검증 필터 | 탐색 필터        | BakeryLocation, SearchAlias, BreadCategory, 영업 상태 계산, VerificationRecord | 검색어 제출 시 Supabase 검증 결과와 카카오 후보를 함께 자동 검색; `성수동` 실제 제과·베이커리 후보 15곳 확인 |
 | R-004 | 부분 | 정확한 지점 상세 정보            | 상세             | BakeryLocation, BusinessHour, SpecialSchedule                                  | `app/bakery/[slug]/page.tsx`; Supabase 조회 연결, 실제 운영 데이터 수집 전                                   |
 | R-005 | 부분 | 대표 메뉴와 가격                 | 상세 메뉴        | MenuItem, VerificationRecord                                                   | Supabase 메뉴·가격·확인일 표시, 실제 운영 데이터 수집 전                                                     |
-| R-006 | 부분 | 공식 출처와 검증 상태            | 상세·출처 기록   | Source, ExternalAccount, VerificationRecord                                    | Supabase 공개 출처·검증 기록 연결; 항목별 기록 화면 미구현                                                   |
+| R-006 | 부분 | 공식 출처와 검증 상태            | 상세·출처 기록   | Source, ExternalAccount, VerificationRecord, OfficialVerificationAction        | 관리자 공식 홈페이지·SNS·전화·현장 확인 등록, 항목별 A등급·재검토 기한·감사 이력 생성; 공개 항목별 전체 이력 화면 미구현 |
 | R-007 | 구현 | 빵집 저장                        | 상세·저장        | SavedBakery, 로컬 저장 병합                                                    | `SavedBakeriesProvider`, `SaveButton`, 저장 유지·해제 브라우저 검증                                          |
 | R-008 | 부분 | 정보 오류 제보                   | 제보 화면        | CorrectionReport                                                               | 입력 검증, API 우선·로컬 폴백, 로컬 Supabase 영구 저장과 접수번호 확인; 원격 DB 미연결                       |
 | R-009 | 부분 | 관리자 검수                      | 관리자           | ReviewAction, VerificationRecord                                               | Supabase 큐·RPC 상태 전이·감사 이력 브라우저 확인; 인증된 검수자 로그인 미연결                               |
 | R-010 | 부분 | 임시휴무와 특별영업              | 상세·관리자      | SpecialSchedule                                                                | 우선순위 계산과 단위 테스트, 임시휴무 실브라우저 검증; 관리자 입력 미구현                                    |
-| R-011 | 예정 | SNS 최신 공지 검증               | 출처 기록·관리자 | ExternalAccount, Source                                                        | 연동 계약과 검증 규칙만 존재                                                                                 |
+| R-011 | 부분 | SNS 최신 공지 검증               | 출처 기록·관리자 | ExternalAccount, Source, VerificationRecord                                    | 공식 계정 판단 근거·게시/적용 시각·원문 URL 입력과 A등급 생성 구현; SNS 자동 수집과 임시 일정 입력은 미구현 |
 | R-012 | 부분 | 유명한 이유 설명                 | 홈·상세          | FameEvidence, Source                                                           | 상세 시드 문구 표시; 실근거 미연동                                                                           |
 | R-013 | 부분 | 위치 권한 거부 대안              | 탐색             | 지역 직접 선택 상태                                                            | 현재 위치 검색과 권한 거부 시 동네 직접 입력 안내 구현                                                       |
 | R-014 | 부분 | 로딩·빈 결과·오류 상태           | 모든 핵심 화면   | 공통 오류 모델                                                                 | 공통 로딩·Supabase 오류·빈 결과·404 및 카카오 인증·쿼터·시간초과·빈 결과 오류 구현                           |
@@ -26,6 +26,7 @@
 | R-018 | 부분 | 테스트 배포                      | 베타 전체        | 환경 변수·배포 설정                                                            | 로컬 production build·배포 환경 계약 구현; 원격 미리보기 미배포                                              |
 | R-019 | 구현 | 외부 후보 검수·정식 등록         | 탐색·관리자      | PlaceCandidate, PlaceCandidateReviewAction, Source, VerificationRecord         | 서명 후보 저장·중복 점수·승인 RPC·관리자 UI 및 실제 후보 저장→승인→C등급 공개 통합 검증 통과                 |
 | R-020 | 구현 | 지도·공공데이터 교차 확인        | 관리자 후보 검수 | StoreRegistryRecord, PlaceCandidateEvidence, 일치 점수, B등급 규칙             | 실제 공공 API 90점 일치, 근거 저장, 승인 후 B등급과 지도·공공 두 출처 생성 통합 검증 통과                    |
+| R-021 | 구현 | 정보 만료·충돌·재검증 대기열     | 상세·관리자      | VerificationRecord.nextReviewAt, result, 유효 표시 등급                        | 기한 경과 A/B→C, 충돌→D, 14일 이내·만료·충돌 관리자 큐, 공식 확인 폼 자동 선택, 실제 브라우저 검증 통과       |
 
 ## 구현 중 갱신 규칙
 
