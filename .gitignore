@@ -11,6 +11,8 @@ npm-debug.log*
 .next-dev.*.log
 *.log
 .playwright-cli/
+.tmp/
 supabase/.branches/
 supabase/.temp/
 .DS_Store
+.gstack/

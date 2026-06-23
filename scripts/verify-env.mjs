@@ -5,6 +5,7 @@ const requiredForDeploy = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "KAKAO_REST_API_KEY",
+  "NEXT_PUBLIC_KAKAO_MAP_JS_KEY",
   "DATA_GO_KR_SERVICE_KEY",
 ];
 const secretKey =

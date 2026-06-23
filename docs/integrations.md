@@ -1,7 +1,7 @@
 # 외부 연동 계약
 
-작성 기준일: 2026-06-22
-상태: 카카오 장소 검색 서버 경계 구현
+작성 기준일: 2026-06-23
+상태: 카카오 장소 검색 서버 경계와 지도 SDK 클라이언트 경계 구현
 
 외부 서비스의 응답, 쿼터, 약관은 변경될 수 있다. 구현과 배포 직전에 공식 문서를 다시 확인하고 확인일을 이 문서에 갱신한다.
 
@@ -71,7 +71,28 @@ type PlaceProvider = {
 환경 변수:
 
 - `KAKAO_REST_API_KEY` — 서버 전용
-- `NEXT_PUBLIC_KAKAO_MAP_JS_KEY` — 브라우저 지도 SDK 도입 시 공개 범위를 검토한 뒤 사용
+- `NEXT_PUBLIC_KAKAO_MAP_JS_KEY` — 브라우저 지도 SDK용 JavaScript 키
+
+### 카카오 지도 JavaScript SDK
+
+2026-06-23 공식 Web API 가이드·문서 확인:
+
+- 카카오 개발자 콘솔의 JavaScript 키를 사용
+- `http://localhost:3000`과 배포 도메인을 JavaScript SDK 도메인으로 등록
+- SDK는 `autoload=false`로 불러온 뒤 `kakao.maps.load`에서 초기화
+- 결과 좌표는 `LatLng(latitude, longitude)` 순서로 전달
+- 여러 결과는 `LatLngBounds`와 `Map.setBounds`로 화면에 맞춤
+- 지도 이동 완료는 `idle` 이벤트에서 영역을 읽어 `이 지역 검색`에 사용
+
+현재 구현:
+
+- 검증된 Supabase 지점과 카카오 미검증 후보를 공통 지도 결과 ID로 변환
+- 데스크톱 목록·지도 동시 표시, 모바일 목록/지도 전환
+- 목록 선택과 지도 미리보기 카드 동기화
+- 지도 영역을 목록과 지도에 동일하게 적용하는 경계 필터
+- `이 지역 검색` 시 지도 중심과 반경을 서버 카카오 검색에 전달
+- JavaScript 키 누락·SDK 로딩 실패 시 목록 탐색을 유지하고 설정 안내 표시
+- 실제 지도 타일과 마커는 JavaScript 키·허용 도메인 설정 후 최종 검증 필요
 
 배포 전 확인:
 
