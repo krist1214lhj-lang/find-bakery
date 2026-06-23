@@ -26,7 +26,11 @@ export default async function AdminCandidatesPage() {
           카카오 장소 후보를 기존 지점과 비교하고 승인·반려·중복 처리합니다.
           승인된 후보만 확인 필요 상태로 공개됩니다.
         </p>
-        <Link href="/admin/reports">사용자 제보 검수 →</Link>
+        <nav className="admin-page-links" aria-label="관리자 화면">
+          <Link href="/admin/reverification">재검증 대기열</Link>
+          <Link href="/admin/reports">사용자 제보</Link>
+          <Link href="/admin/verifications">공식 출처 확인</Link>
+        </nav>
       </div>
       <AdminPlaceCandidateQueue initialQueue={queue} />
     </section>

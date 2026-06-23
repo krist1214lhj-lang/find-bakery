@@ -491,6 +491,77 @@ export type Database = {
           },
         ];
       };
+      official_verification_actions: {
+        Row: {
+          created_at: string;
+          field: Database["public"]["Enums"]["verification_field"];
+          id: string;
+          location_id: string;
+          menu_item_id: string | null;
+          note: string;
+          reviewer_id: string | null;
+          reviewer_label: string;
+          source_id: string;
+          source_type: Database["public"]["Enums"]["source_type"];
+          verification_record_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          field: Database["public"]["Enums"]["verification_field"];
+          id?: string;
+          location_id: string;
+          menu_item_id?: string | null;
+          note: string;
+          reviewer_id?: string | null;
+          reviewer_label?: string;
+          source_id: string;
+          source_type: Database["public"]["Enums"]["source_type"];
+          verification_record_id: string;
+        };
+        Update: {
+          created_at?: string;
+          field?: Database["public"]["Enums"]["verification_field"];
+          id?: string;
+          location_id?: string;
+          menu_item_id?: string | null;
+          note?: string;
+          reviewer_id?: string | null;
+          reviewer_label?: string;
+          source_id?: string;
+          source_type?: Database["public"]["Enums"]["source_type"];
+          verification_record_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "official_verification_actions_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "bakery_locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "official_verification_actions_menu_item_id_fkey";
+            columns: ["menu_item_id"];
+            isOneToOne: false;
+            referencedRelation: "menu_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "official_verification_actions_source_id_fkey";
+            columns: ["source_id"];
+            isOneToOne: false;
+            referencedRelation: "sources";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "official_verification_actions_verification_record_id_fkey";
+            columns: ["verification_record_id"];
+            isOneToOne: false;
+            referencedRelation: "verification_records";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       place_candidate_evidence: {
         Row: {
           candidate_id: string;
@@ -988,6 +1059,46 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      register_official_verification: {
+        Args: {
+          account_handle?: string;
+          account_officiality_evidence?: string;
+          account_platform?: Database["public"]["Enums"]["account_platform"];
+          official_source_type: Database["public"]["Enums"]["source_type"];
+          source_effective_from?: string;
+          source_effective_until?: string;
+          source_published_at?: string;
+          source_publisher: string;
+          source_url?: string;
+          target_field: Database["public"]["Enums"]["verification_field"];
+          target_location_id: string;
+          target_menu_item_id?: string;
+          verification_note: string;
+        };
+        Returns: {
+          created_at: string;
+          field: Database["public"]["Enums"]["verification_field"];
+          grade: Database["public"]["Enums"]["verification_grade"];
+          id: string;
+          location_id: string;
+          menu_item_id: string | null;
+          next_review_at: string;
+          normalized_value: Json;
+          note: string | null;
+          result: Database["public"]["Enums"]["verification_result"];
+          rule_version: number;
+          source_authority: Database["public"]["Enums"]["source_authority"];
+          source_id: string;
+          verified_at: string;
+          verified_by: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "verification_records";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       review_correction_report: {
         Args: {
           report_id: string;

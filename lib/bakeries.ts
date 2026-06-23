@@ -42,6 +42,8 @@ export const bakeries: Bakery[] = [
     verification: {
       grade: "A",
       checkedAt: "2026-06-16T03:00:00+09:00",
+      nextReviewAt: "2026-07-16T03:00:00+09:00",
+      state: "current",
       sourceLabel: "공식 인스타그램",
       sourceUrl: "https://www.instagram.com/",
     },
@@ -101,6 +103,8 @@ export const bakeries: Bakery[] = [
     verification: {
       grade: "B",
       checkedAt: "2026-05-25T11:00:00+09:00",
+      nextReviewAt: "2026-08-23T11:00:00+09:00",
+      state: "current",
       sourceLabel: "지도·공공데이터 교차 확인",
       sourceUrl: "https://map.kakao.com/",
     },
@@ -147,6 +151,8 @@ export const bakeries: Bakery[] = [
     verification: {
       grade: "C",
       checkedAt: "2026-02-12T12:00:00+09:00",
+      nextReviewAt: "2026-05-13T12:00:00+09:00",
+      state: "expired",
       sourceLabel: "공식 메뉴 게시물",
       sourceUrl: "https://www.instagram.com/",
     },

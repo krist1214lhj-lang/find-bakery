@@ -2,6 +2,7 @@ import type {
   Bakery,
   SpecialSchedule,
   VerificationGrade,
+  VerificationState,
 } from "@/lib/types";
 
 export type OperatingStatus = {
@@ -25,6 +26,79 @@ const gradeMaxAgeDays: Record<VerificationGrade, number> = {
   D: 0,
 };
 
+const dueSoonDays = 14;
+
+export type VerificationRecordCandidate = {
+  grade: VerificationGrade;
+  result:
+    | "confirmed"
+    | "supports"
+    | "conflicts"
+    | "superseded"
+    | "rejected";
+  verifiedAt: string;
+  nextReviewAt: string;
+};
+
+export function getVerificationState(
+  record: VerificationRecordCandidate,
+  now = new Date(),
+): VerificationState {
+  if (record.result === "conflicts") {
+    return "conflict";
+  }
+  if (record.result !== "confirmed" && record.result !== "supports") {
+    return "unverified";
+  }
+
+  const nextReviewTime = Date.parse(record.nextReviewAt);
+  if (!Number.isFinite(nextReviewTime)) {
+    return "unverified";
+  }
+  if (nextReviewTime <= now.getTime()) {
+    return "expired";
+  }
+  if (
+    nextReviewTime - now.getTime() <=
+    dueSoonDays * 24 * 60 * 60 * 1000
+  ) {
+    return "due-soon";
+  }
+  return "current";
+}
+
+export function getEffectiveVerificationGrade(
+  record: VerificationRecordCandidate,
+  now = new Date(),
+): VerificationGrade {
+  const state = getVerificationState(record, now);
+  if (state === "conflict" || state === "unverified") {
+    return "D";
+  }
+  if (state === "expired") {
+    return record.grade === "D" ? "D" : "C";
+  }
+  return record.grade;
+}
+
+export function selectDisplayVerification<T extends VerificationRecordCandidate>(
+  records: T[],
+) {
+  const active = records.filter(
+    (record) =>
+      record.result === "confirmed" ||
+      record.result === "supports" ||
+      record.result === "conflicts",
+  );
+  const conflicts = active.filter((record) => record.result === "conflicts");
+  const candidates = conflicts.length > 0 ? conflicts : active;
+
+  return [...candidates].sort(
+    (left, right) =>
+      Date.parse(right.verifiedAt) - Date.parse(left.verifiedAt),
+  )[0];
+}
+
 export function formatCheckedDate(isoDate: string) {
   return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
@@ -38,7 +112,31 @@ export function isVerificationFresh(
   grade: VerificationGrade,
   checkedAt: string,
   now = new Date(),
+  nextReviewAt?: string,
+  state?: VerificationState,
 ) {
+  if (state) {
+    return (
+      (state === "current" || state === "due-soon") &&
+      (grade === "A" || grade === "B")
+    );
+  }
+
+  if (nextReviewAt) {
+    return (
+      (grade === "A" || grade === "B") &&
+      getVerificationState(
+        {
+          grade,
+          result: "confirmed",
+          verifiedAt: checkedAt,
+          nextReviewAt,
+        },
+        now,
+      ) !== "expired"
+    );
+  }
+
   if (grade === "C" || grade === "D") {
     return false;
   }
@@ -58,12 +156,19 @@ export function getOperatingStatus(
       bakery.verification.grade,
       bakery.verification.checkedAt,
       now,
+      bakery.verification.nextReviewAt,
+      bakery.verification.state,
     )
   ) {
     return {
       state: "unknown",
       label: "영업 여부 확인 필요",
-      description: "정보 확인일이 지났어요",
+      description:
+        bakery.verification.state === "conflict"
+          ? "출처 정보가 서로 달라요"
+          : bakery.verification.state === "unverified"
+            ? "검증 기록이 필요해요"
+            : "정보 확인일이 지났어요",
       hoursLabel: bakery.todayHours,
     };
   }

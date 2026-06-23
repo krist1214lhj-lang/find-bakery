@@ -34,6 +34,7 @@ User 1 ── N SavedBakery
 User 1 ── N CorrectionReport
 BakeryLocation 1 ── N CorrectionReport
 CorrectionReport 1 ── N ReviewAction
+BakeryLocation 1 ── N OfficialVerificationAction
 ```
 
 ## 3. 엔터티
@@ -276,6 +277,35 @@ CorrectionReport 1 ── N ReviewAction
 | `note`            | text        |    X | 판단 메모                                                                                                               |
 
 등급은 저장하되 원천 속성으로부터 다시 계산할 수 있어야 한다. 계산 규칙 변경 시 과거 기록을 재평가할 수 있게 규칙 버전을 추가할 수 있다.
+
+공식 확인 등록은 현재 저장된 지점·메뉴 값을 검증 대상으로 삼는다. 출처 입력과 사실 값 수정은 분리하며, 값이 다르면 먼저 제보·검수 흐름에서 수정한다. 새 공식 확인이 등록되면 같은 항목의 기존 활성 기록은 삭제하지 않고 `superseded`로 전환한다.
+
+사용자 화면의 표시 등급은 저장 등급을 그대로 복사하지 않는다.
+
+- `nextReviewAt`이 지나면 A/B 기록도 C로 표시한다.
+- 활성 `conflicts` 기록이 있으면 확인일과 무관하게 D로 표시한다.
+- 재검토 기한 14일 전부터 관리자 대기열에 노출한다.
+- `superseded`, `rejected` 기록은 현재 표시와 대기열 계산에서 제외한다.
+- 충돌 기록은 최신 확인 기록보다 먼저 표시해 영업 중을 단정하지 않는다.
+
+### OfficialVerificationAction
+
+공식 홈페이지·SNS·전화·현장 확인으로 A등급을 생성한 감사 기록이다.
+
+| 필드                   | 타입        | 필수 | 설명                                  |
+| ---------------------- | ----------- | ---: | ------------------------------------- |
+| `locationId`           | UUID        |    O | 대상 지점                             |
+| `menuItemId`           | UUID        |    X | 메뉴·가격 확인 대상                   |
+| `sourceId`             | UUID        |    O | 생성된 공식 출처                      |
+| `verificationRecordId` | UUID        |    O | 생성된 A등급 검증 기록                |
+| `reviewerId`           | UUID        |    X | 로그인 검수자                         |
+| `reviewerLabel`        | text        |    O | 서버 작업을 포함한 감사 주체          |
+| `field`                | enum        |    O | 확인한 정보 항목                      |
+| `sourceType`           | enum        |    O | 공식 홈페이지·SNS·전화·현장 확인 방식 |
+| `note`                 | text        |    O | 판단 근거                             |
+| `createdAt`            | timestamptz |    O | 등록 시각                             |
+
+`register_official_verification` RPC가 공식 계정, 출처, 검증 기록, 감사 기록을 한 트랜잭션으로 생성한다. 공식 웹 출처는 URL, 플랫폼, 공식성 판단 근거가 필수다.
 
 ### FameEvidence
 

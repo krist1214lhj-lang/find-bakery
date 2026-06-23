@@ -1,6 +1,6 @@
 # Supabase 데이터베이스 설정
 
-작성 기준일: 2026-06-22
+작성 기준일: 2026-06-23
 
 ## 현재 상태
 
@@ -8,6 +8,7 @@
 - UI 검증용 시드: `supabase/seed.sql`
 - 로컬 스키마에서 생성한 TypeScript 타입: `lib/supabase/database.types.ts`
 - 정적 스키마 계약 검사: `npm run verify:schema`
+- 공식 출처 확인과 A등급 생성 RPC: `register_official_verification`
 
 2026-06-19에 Docker 기반 로컬 Supabase에서 초기 마이그레이션과 시드를 실제 적용했다. PostgreSQL 스키마 린트, 공개 지점 조회 RLS, 익명 제보 직접 입력 차단, 일반 사용자의 검수 RPC 차단, 검수자 승인 트랜잭션을 확인했다.
 
@@ -41,6 +42,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 5. 일반 로그인 사용자가 검수 RPC 실행 불가
 6. `reviewer` 또는 `admin` 역할만 검수 RPC 실행 가능
 7. 승인·반려 시 제보 상태와 `review_actions`가 한 트랜잭션으로 변경
+8. 공식 확인 시 계정·출처·A등급·감사 이력이 한 트랜잭션으로 생성
 
 2026-06-19 로컬 확인 결과:
 
@@ -76,6 +78,21 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 공공데이터 교차 확인 근거를 가진 후보 승인 테스트도 통과했다. 일치 점수 100점의 상가정보 근거를 저장한 뒤 승인했을 때 주소·좌표의 카카오·공공데이터 기록이 모두 B등급으로 생성되고 `map_api`, `public_data` 출처가 함께 보존되었다. 검증 데이터는 제거해 시드 지점 3개 상태로 복구했다.
 
 실제 공공 API 통합 검증에서는 카카오 `퍼먼트`와 상가정보 `퍼먼트알티드`가 상호 유사·주소 일치·좌표 1m 이내로 90점을 받았다. 근거 저장 후 승인했을 때 동일하게 B등급과 두 출처가 생성되었고 검증 데이터는 제거했다.
+
+2026-06-23 공식 출처 검증:
+
+- `official_verification_actions` RLS와 감사 주체 제약 적용
+- 공식 홈페이지·SNS는 URL, 플랫폼, 공식성 판단 근거 필수
+- 전화·현장 확인은 외부 계정 생성을 금지
+- 현재 저장값이 없는 항목은 A등급 생성 차단
+- 같은 지점·항목·메뉴의 기존 활성 검증은 `superseded`로 보존
+- 기존 `conflicts` 기록도 명시적인 새 공식 확인이 성공하면 `superseded`로 전환
+- 영업시간 공식 SNS 등록 → 출처·외부 계정·A등급·감사 이력 생성 확인
+- 같은 공식 SNS로 영업시간·전화번호를 연속 확인해 외부 계정 1개와 감사 이력 2건 생성 확인
+- 상세 화면에 새 확인일·발행 주체·공식 원문 링크 반영 확인
+- 브라우저 검증 후 가상 공식 출처 데이터는 로컬 DB 초기화로 제거
+- `next_review_at` 경과 기록의 공개 C등급 전환과 관리자 재검증 큐 노출 확인
+- 테스트 충돌 기록의 공개 D등급 전환과 큐 최우선 정렬 확인
 
 ## 원격 테스트 프로젝트 연결
 
@@ -119,6 +136,6 @@ npm run verify:deploy-env
 
 1. `lib/supabase/database.types.ts` 갱신
 2. API 및 저장소 타입 검사
-3. `npm run verify:schema` — 모든 마이그레이션의 RLS·RPC 계약 검사
+3. `npm run verify:schema` — 19개 RLS 테이블과 검수·공식 확인 RPC 계약 검사
 4. `npm run typecheck`
 5. 제보·검수 상태 전이 테스트

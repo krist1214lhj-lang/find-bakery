@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import { bakeries, searchBakeries } from "@/lib/bakeries";
 import {
   formatCheckedDate,
+  getEffectiveVerificationGrade,
   getOperatingStatus,
+  getVerificationState,
   isVerificationFresh,
+  selectDisplayVerification,
 } from "@/lib/verification";
 
 describe("verification freshness", () => {
@@ -26,6 +29,47 @@ describe("verification freshness", () => {
       ),
     ).toBe(false);
   });
+
+  it("uses the stored next review date as the expiry boundary", () => {
+    const record = {
+      grade: "A" as const,
+      result: "confirmed" as const,
+      verifiedAt: "2026-06-01T00:00:00Z",
+      nextReviewAt: "2026-06-20T00:00:00Z",
+    };
+
+    expect(getVerificationState(record, new Date("2026-06-19T00:00:00Z"))).toBe(
+      "due-soon",
+    );
+    expect(getVerificationState(record, new Date("2026-06-21T00:00:00Z"))).toBe(
+      "expired",
+    );
+    expect(
+      getEffectiveVerificationGrade(record, new Date("2026-06-21T00:00:00Z")),
+    ).toBe("C");
+  });
+
+  it("shows an unresolved conflict ahead of a confirmed record", () => {
+    const confirmed = {
+      id: "confirmed",
+      grade: "B" as const,
+      result: "confirmed" as const,
+      verifiedAt: "2026-06-20T00:00:00Z",
+      nextReviewAt: "2026-09-20T00:00:00Z",
+    };
+    const conflict = {
+      id: "conflict",
+      grade: "D" as const,
+      result: "conflicts" as const,
+      verifiedAt: "2026-06-19T00:00:00Z",
+      nextReviewAt: "2026-06-20T00:00:00Z",
+    };
+
+    expect(selectDisplayVerification([confirmed, conflict])?.id).toBe(
+      "conflict",
+    );
+    expect(getEffectiveVerificationGrade(conflict)).toBe("D");
+  });
 });
 
 describe("operating status", () => {
@@ -35,6 +79,24 @@ describe("operating status", () => {
       getOperatingStatus(staleBakery, new Date("2026-06-18T12:00:00+09:00"))
         .state,
     ).toBe("unknown");
+  });
+
+  it("explains an unresolved source conflict without claiming open status", () => {
+    const conflictedBakery = {
+      ...bakeries[0],
+      verification: {
+        ...bakeries[0].verification,
+        grade: "D" as const,
+        state: "conflict" as const,
+      },
+    };
+    const status = getOperatingStatus(
+      conflictedBakery,
+      new Date("2026-06-18T12:00:00+09:00"),
+    );
+
+    expect(status.state).toBe("unknown");
+    expect(status.description).toBe("출처 정보가 서로 달라요");
   });
 
   it("uses verified business hours for a fresh record", () => {

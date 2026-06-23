@@ -10,6 +10,11 @@ import type {
   SpecialSchedule,
   VerificationGrade,
 } from "@/lib/types";
+import {
+  getEffectiveVerificationGrade,
+  getVerificationState,
+  selectDisplayVerification,
+} from "@/lib/verification";
 
 type Tables = Database["public"]["Tables"];
 type LocationRow = Tables["bakery_locations"]["Row"];
@@ -23,7 +28,15 @@ type SourceRow = Pick<
 >;
 type VerificationRow = Pick<
   Tables["verification_records"]["Row"],
-  "location_id" | "field" | "source_id" | "grade" | "verified_at"
+  | "id"
+  | "location_id"
+  | "menu_item_id"
+  | "field"
+  | "source_id"
+  | "grade"
+  | "result"
+  | "verified_at"
+  | "next_review_at"
 >;
 type ScheduleRow = Tables["special_schedules"]["Row"];
 type FameRow = Tables["fame_evidence"]["Row"];
@@ -141,7 +154,9 @@ const loadBakeryDataSet = cache(async (): Promise<BakeryDataSet> => {
       .eq("status", "accessible"),
     client
       .from("verification_records")
-      .select("location_id,field,source_id,grade,verified_at")
+      .select(
+        "id,location_id,menu_item_id,field,source_id,grade,result,verified_at,next_review_at",
+      )
       .order("verified_at", { ascending: false }),
     client.from("special_schedules").select("*").eq("status", "confirmed"),
     client.from("fame_evidence").select("*").eq("status", "active"),
@@ -191,13 +206,29 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     data.hours.filter((hour) => hour.location_id === location.id),
   );
   const verification =
-    data.verifications.find(
-      (item) =>
-        item.location_id === location.id && item.field === "business_hours",
-    ) ?? data.verifications.find((item) => item.location_id === location.id);
+    selectDisplayVerification(
+      data.verifications
+        .filter(
+          (item) =>
+            item.location_id === location.id &&
+            item.field === "business_hours",
+        )
+        .map(toVerificationCandidate),
+    ) ??
+    selectDisplayVerification(
+      data.verifications
+        .filter((item) => item.location_id === location.id)
+        .map(toVerificationCandidate),
+    );
   const verificationSource = verification
     ? sourceById.get(verification.source_id)
     : undefined;
+  const verificationState = verification
+    ? getVerificationState(verification)
+    : "unverified";
+  const effectiveGrade = verification
+    ? getEffectiveVerificationGrade(verification)
+    : "D";
   const fame = data.fameEvidence.find(
     (item) => item.location_id === location.id,
   );
@@ -237,18 +268,37 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     fameSource:
       fameSource?.publisher ?? fameSource?.url ?? "검증된 출처 준비 중",
     verification: {
-      grade: (verification?.grade ?? "D") as VerificationGrade,
+      grade: effectiveGrade as VerificationGrade,
       checkedAt:
-        verification?.verified_at ?? location.updated_at ?? location.created_at,
+        verification?.verifiedAt ?? location.updated_at ?? location.created_at,
+      nextReviewAt:
+        verification?.nextReviewAt ??
+        location.updated_at ??
+        location.created_at,
+      state: verificationState,
       sourceLabel:
-        verificationSource?.publisher ??
-        verificationSource?.type ??
-        "출처 확인 필요",
+        verificationState === "conflict"
+          ? `출처 충돌 · ${
+              verificationSource?.publisher ??
+              verificationSource?.type ??
+              "재확인 필요"
+            }`
+          : (verificationSource?.publisher ??
+            verificationSource?.type ??
+            "출처 확인 필요"),
       sourceUrl: verificationSource?.url ?? undefined,
     },
     menus: data.menus
       .filter((menu) => menu.location_id === location.id)
       .map(mapMenu),
+  };
+}
+
+function toVerificationCandidate(record: VerificationRow) {
+  return {
+    ...record,
+    verifiedAt: record.verified_at,
+    nextReviewAt: record.next_review_at,
   };
 }
 
