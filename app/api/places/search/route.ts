@@ -10,14 +10,21 @@ export async function GET(request: Request) {
   const query = url.searchParams.get("q")?.trim() ?? "";
   const latitude = readCoordinate(url.searchParams.get("lat"), -90, 90);
   const longitude = readCoordinate(url.searchParams.get("lon"), -180, 180);
+  const radiusMeters = readCoordinate(
+    url.searchParams.get("radius"),
+    1,
+    20_000,
+  );
 
   if (!query || query.length > 80) {
     return jsonError("1~80자의 검색어를 입력해 주세요.", 400);
   }
   if (
     (latitude === undefined) !== (longitude === undefined) ||
+    (radiusMeters !== undefined && latitude === undefined) ||
     latitude === null ||
-    longitude === null
+    longitude === null ||
+    radiusMeters === null
   ) {
     return jsonError("현재 위치 좌표를 확인해 주세요.", 400);
   }
@@ -27,6 +34,7 @@ export async function GET(request: Request) {
       query,
       latitude,
       longitude,
+      radiusMeters,
     });
     return NextResponse.json(
       {

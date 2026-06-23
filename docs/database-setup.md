@@ -112,6 +112,7 @@ npx supabase gen types typescript --project-id <TEST_PROJECT_REF> > lib/supabase
 - `SUPABASE_SECRET_KEY`
 - `NEXT_PUBLIC_APP_URL`
 - `ENABLE_DEMO_ADMIN=false`
+- `NEXT_PUBLIC_KAKAO_MAP_JS_KEY`
 
 배포 전:
 
