@@ -1,4 +1,7 @@
-const deployMode = process.argv.includes("--deploy");
+// Vercel 빌드(VERCEL=1)에서는 플래그 없이도 배포 검증을 강제한다.
+// 그래야 잘못된 env(예: URL 칸에 secret key)가 빌드 단계에서 차단된다.
+const deployMode =
+  process.argv.includes("--deploy") || process.env.VERCEL === "1";
 
 const requiredForDeploy = [
   "NEXT_PUBLIC_APP_URL",
@@ -50,6 +53,14 @@ console.log(
 function validateHttpsUrl(name) {
   const value = process.env[name]?.trim();
   if (!value) {
+    return;
+  }
+
+  // 흔한 실수: URL 칸에 Supabase key(sb_publishable_/sb_secret_/JWT)를 붙여넣음.
+  if (/^(sb_|eyJ)/.test(value)) {
+    errors.push(
+      `${name} looks like a Supabase key, not a URL. Set it to https://<project-ref>.supabase.co`,
+    );
     return;
   }
 

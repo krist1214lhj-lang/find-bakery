@@ -61,4 +61,14 @@ describe("Supabase server configuration", () => {
       "Supabase URL must use HTTPS outside localhost.",
     );
   });
+
+  it("rejects loopback Supabase URLs when running on Vercel", () => {
+    process.env.VERCEL = "1";
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
+    process.env.SUPABASE_SECRET_KEY = "secret";
+
+    expect(() => getSupabaseServerConfig()).toThrow(
+      "Supabase URL이 localhost를 가리킵니다",
+    );
+  });
 });
