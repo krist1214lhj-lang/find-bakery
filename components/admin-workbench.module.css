@@ -1,0 +1,177 @@
+/* 로컬 전용 작업대 스타일 (CSS 모듈 — 전역 디자인 무손상).
+   색은 기존 디자인 토큰을 쓰되, 변수명이 달라도 깨지지 않게 폴백값을 둠. */
+
+.localBadge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--flour-100, #f3ecdd);
+  border: 1px solid var(--flour-200, #e6dfce);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-700, #5a5142);
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 24px;
+}
+
+.summary span {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+}
+
+.pill_approve { background: #e7f6ec; color: #1f7a43; border-color: #bfe6cd; }
+.pill_hold { background: #fff4d6; color: #8a6a00; border-color: #f0dca0; }
+.pill_reject { background: #fdeceb; color: #b23b34; border-color: #f3c9c5; }
+.pillMuted {
+  background: var(--flour-100, #f3ecdd);
+  color: var(--ink-700, #5a5142);
+  border-color: var(--flour-200, #e6dfce) !important;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; }
+}
+
+.lists { display: flex; flex-direction: column; gap: 28px; }
+
+.group { }
+
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.05rem;
+  margin: 0 0 12px;
+}
+
+.groupTitle span {
+  font-size: 0.8rem;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--flour-100, #f3ecdd);
+  color: var(--ink-700, #5a5142);
+}
+
+.groupEmpty {
+  color: var(--ink-500, #8b8270);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.cards { display: flex; flex-direction: column; gap: 12px; }
+
+.card {
+  text-align: left;
+  background: var(--cream-50, #fbf8f1);
+  border: 1px solid var(--flour-200, #e6dfce);
+  border-left: 4px solid var(--flour-200, #e6dfce);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.05s, border-color 0.15s;
+}
+
+.card:hover { box-shadow: 0 4px 16px rgb(43 38 32 / 8%); }
+.card:active { transform: translateY(1px); }
+.card:focus-visible { outline: 2px solid #c08a3e; outline-offset: 2px; }
+
+.card_approve { border-left-color: #2faa63; }
+.card_hold { border-left-color: #e0b020; }
+.card_reject { border-left-color: #d96a62; }
+
+.cardSelected {
+  border-color: #c08a3e;
+  box-shadow: 0 0 0 2px rgb(192 138 62 / 35%);
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cardHead h3 { margin: 0; font-size: 1.02rem; }
+
+.franchise {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef0ff;
+  color: #4a52c0;
+  white-space: nowrap;
+}
+
+.addr { margin: 6px 0 2px; font-size: 0.9rem; color: var(--ink-800, #43392b); }
+.category { margin: 0; font-size: 0.82rem; color: var(--ink-500, #8b8270); }
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+}
+
+.gradeBadge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #f3eedf;
+  color: #8a6a3a;
+  border: 1px solid #e6dab8;
+  font-weight: 600;
+}
+
+.source { color: var(--ink-600, #6d6452); }
+.source a { color: #b06a1f; text-decoration: underline; }
+
+.reason {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-600, #6d6452);
+  background: var(--flour-100, #f6f1e6);
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+
+.mapPanel { position: sticky; top: 16px; }
+
+.mapHint {
+  margin: 10px 2px 0;
+  font-size: 0.82rem;
+  color: var(--ink-500, #8b8270);
+}
+
+.empty {
+  background: var(--cream-50, #fbf8f1);
+  border: 1px dashed var(--flour-200, #e6dfce);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.empty pre {
+  margin-top: 12px;
+  background: #2b2620;
+  color: #f3ecdd;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  overflow-x: auto;
+}
