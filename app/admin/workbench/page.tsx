@@ -18,7 +18,7 @@ export default async function AdminWorkbenchPage() {
     notFound();
   }
 
-  const data = loadWorkbench();
+  const data = await loadWorkbench();
   const mapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_JS_KEY;
 
   return (

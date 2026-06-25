@@ -22,7 +22,9 @@
 - **자동화 3단계(내 승인 → DB 저장)** 완성 — `scripts/approve-and-save.mjs`. 플래그 3단계(목록 → `--approve` 드라이런 → `--confirm` 저장). **첫 실제 저장: 스택베이커리 1곳**(서울 광진구) DB 입력 + 배포 앱 상세페이지 노출 확인. → **자동화 5단계 전 과정(수집→검증→승인→저장→노출) 완성.**
 - ⚠️ 자동수집 빵집은 **검증기록 없이(미검증, 신뢰등급 D 수준)** 저장됨 → 추후 검증·등급 부여 필요(다음 과제).
 - ⚠️ 빵 카테고리는 이름 키워드로만 보수적 추정 → 다수가 **카테고리 미정**으로 저장됨 → 보완 필요(다음 과제).
-- **로컬 전용 관리자 "작업대"(보기 단계)** 완성 — `/admin/workbench`. 2차 결과(stage2-verified.json)를 승인후보/보류/제외 3구역 카드 + 공용 카카오 지도(KakaoMap 재사용)로 표시. 이름·주소·카테고리·검증등급(미검증·D)·출처(카카오 원문)·프랜차이즈 표시. **이중 잠금**: 페이지 `isDemoAdminEnabled()`+`notFound()` 가드 + `middleware.ts`가 배포에서 `/admin/*`·`/api/admin/*`를 하드 404 차단(로컬 dev에서만 열림). UI는 CSS 모듈로 격리.
+- **로컬 전용 관리자 "작업대"(보기 단계)** 완성 — `/admin/workbench`. 2차 결과(stage2-verified.json)를 승인후보/보류/제외 3구역 카드 + 공용 카카오 지도(KakaoMap 재사용)로 표시. **이중 잠금**: 페이지 가드 + `middleware.ts` 배포 하드 404. UI는 CSS 모듈로 격리.
+- **관리자 작업대 2단계(쓰기 3종)** 완성 — 카드에서 승인 저장 / 카테고리 지정 / 수동 등급(D/C/B/A). 작업대는 `.env.remote.local`로 **원격(라이브) DB**에 연결(approve-and-save와 동일). 등급은 뺑드미와 동일 구조. 스택베이커리로 원격 테스트 통과(적용 확인 후 라이브 보호 위해 테스트값 되돌림).
+- **카카오 JS 지도 켜짐** — 카카오 디벨로퍼스 > 앱 설정 > 플랫폼 > Web 사이트 도메인에 `http://localhost:3000` 등록(카카오 사이트 설정, 코드 변경 없음) → 작업대 지도 핀 정상 표시. **작업대 완전 완성**(카드·지도·카테고리·승인·등급).
 
 ## 자동화 전체 그림 (5단계 전부 완성)
 ```
@@ -46,16 +48,19 @@
 - 안전: `--confirm` 없으면 쓰기 없음 / 저장 직전 DB 중복 재조회 / 좌표·주소 카카오값만 / 카테고리 불확실하면 미정(추측 금지)
 
 ## 관리자 작업대 요약 — `/admin/workbench` (로컬 전용)
-- 파일: `app/admin/workbench/page.tsx`, `lib/workbench.ts`, `components/admin-workbench.tsx`(+`.module.css`), `middleware.ts`
-- 입력: `output/stage2-verified.json`. DB 안 건드림(보기 단계). 좌표·주소 카카오값 그대로.
-- 보안 이중 잠금: 페이지 가드 + 미들웨어(배포 시 `/admin/*`·`/api/admin/*` 하드 404). 로컬 `npm run dev`에서만 열림(HMR).
+- 파일: `app/admin/workbench/page.tsx`, `lib/workbench.ts`(읽기+DB상태), `lib/workbench-write.ts`(쓰기+원격클라이언트), `app/api/admin/workbench/{approve,categories,grade}/route.ts`, `components/admin-workbench.tsx`(+`.module.css`), `middleware.ts`
+- 입력: `output/stage2-verified.json` + DB 상태(저장여부·기존 카테고리·현재 등급) 첨부.
+- **DB 연결: 원격(라이브)** — `createWorkbenchClient()`가 `.env.remote.local`을 읽어 원격에 연결(approve-and-save.mjs와 동일). 앱 나머지는 `.env.local`=로컬 dev DB.
+- **쓰기 3종**(모두 window.confirm 1회 + 저장된 빵집에만 활성):
+  - 승인: approve API → 브랜드+location(active) 저장, 멱등.
+  - 카테고리: 6종 체크박스(+이름기반 "추정" 힌트, 자동저장X) → location_bread_categories add/remove 동기화.
+  - 등급: D/C/B/A → 뺑드미 동일 구조(sources→verification_records, field=business_hours, verified_at=오늘).
+- 보안 이중 잠금: 페이지 가드 + 미들웨어(배포 시 `/admin/*`·`/api/admin/*` 하드 404). `.env.remote.local`은 gitignored 로컬 파일 → 배포에 없음. **로컬 dev에서만 동작 → 외부 노출 없음.**
 
-## 바로 다음 할 일 — 관리자 작업대 2단계(쓰기 연동)
-보기 페이지는 완성. 다음은 카드에 동작 버튼 추가:
-1. **승인 버튼** — 카드에서 승인 → 저장(approve-and-save 로직 연동).
-2. **카테고리 지정** — 카테고리 미정 빵집에 빵 카테고리 수동 연결.
-3. **검증·등급 부여** — 자동수집 빵집(미검증/D)에 등급(A~D) 매기기.
-- (선택) 프랜차이즈 체인 ASCII slug 매핑 확대(현재 미매핑 체인은 위치별 브랜드로 저장).
+## 바로 다음 할 일
+1. **검증등급 자동화** — 인스타·네이버 블로그 등 교차검증으로 **D→B 등급 자동 산정**(현재는 작업대 수동 등급만). 제일 복잡한 과제.
+2. **대량 수집** — 더 많은 동네를 1·2차로 모아 작업대에서 승인·정비(현재 광진구/연남동 위주).
+- (선택) 보류(사람확인) 건 검토 흐름(보류 카드에도 승인/제외 액션), 프랜차이즈 체인 ASCII slug 매핑 확대.
 
 ## 꼭 지킬 규칙
 - 작업 전 **계획 보여주고 승인** 받기.

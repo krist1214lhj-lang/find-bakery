@@ -28,22 +28,25 @@
 | `dd2476c` | 2차 검증 **실제 Claude 호출판 재작성** + 일지 | ✅ |
 | `2b0aa4f` | 일지: 2차 실호출 검증 반영 | ✅ |
 | `d72ce68` | 3단계 `approve-and-save` 추가 + 일지 | ✅ |
-| (이번) | 로컬 전용 관리자 작업대 페이지 + 배포 차단 미들웨어 + 일지 | ❌ (push 대기) |
+| `2fd0167` | 로컬 전용 관리자 작업대 페이지(보기) + 배포 차단 미들웨어 + 일지 | ❌ (push 대기) |
+| (이번) | 작업대 2단계: 쓰기 3종(승인·카테고리·등급) + 원격 연결 + 일지 | ❌ (push 대기) |
 
 ---
 
 ## 🔄 진행 중
 
-- **관리자 작업대 2단계(쓰기 연동)** — 카드에 승인·카테고리지정·등급부여 버튼 ← 바로 다음 작업
-- 미커밋 파일: `next-env.d.ts`(자동 생성 파일 — 커밋하지 않음)
+- **관리자 작업대 완성** — 카드 + 공용 카카오 지도 + 쓰기 3종(승인 저장 / 카테고리 지정 / 수동 등급부여). 로컬 전용(미들웨어+가드). 작업대는 원격(라이브) DB 연결(`createWorkbenchClient`, `.env.remote.local`). 등급은 뺑드미 동일 구조. 스택베이커리로 원격 테스트 통과. 타입체크·콘솔에러0·window.confirm OK.
+  - **카카오 JS 지도 켜짐**: 카카오 디벨로퍼스 > 앱 설정 > 플랫폼 > Web 사이트 도메인에 `http://localhost:3000` 등록 완료 → 작업대 지도 핀 정상 표시. (카카오 사이트 설정이라 저장소 코드 변경 없음.)
+- 미커밋: 작업대 2단계 코드(이번 커밋 예정). `next-env.d.ts`는 커밋 제외.
 
 ---
 
 ## ✅ 다음 할 일
 
-1. **관리자 작업대 2단계(쓰기 연동)**: (a) 카드 **승인 버튼** → 저장(approve-and-save 로직 연동), (b) **카테고리 미정** 빵집 수동 연결, (c) 자동수집 빵집 **검증·등급(A~D) 부여**.
-2. (선택) 프랜차이즈 체인 **ASCII slug 매핑 확대**(현재 미매핑 체인은 위치별 브랜드로 저장됨).
-3. (배포 보안) 한때 노출됐던 Supabase secret key **rotate** 여부 확인 — 사용자 확인 필요
+1. **검증등급 자동화** — 인스타·네이버 블로그 등 교차검증으로 D→B 등급 자동 산정(현재는 작업대 수동 등급만).
+2. **대량 수집** — 더 많은 동네를 1·2차로 모아 작업대에서 승인·정비(현재 광진구/연남동 위주).
+3. (선택) 보류(사람확인) 건 검토 흐름, 프랜차이즈 체인 ASCII slug 매핑 확대.
+4. (배포 보안) 한때 노출됐던 Supabase secret key **rotate** 여부 확인 — 사용자 확인 필요
 
 ### 전체 파이프라인 그림 (5단계 전부 완성)
 ```
@@ -82,8 +85,10 @@
 |---|---|---|
 | `app/admin/workbench/page.tsx` | 작업대 페이지(가드+데이터 로드) | 완성·커밋 대기 |
 | `lib/workbench.ts` | `stage2-verified.json` 읽기(서버 fs) | 완성·커밋 대기 |
-| `components/admin-workbench.tsx` (+`.module.css`) | 상태별 카드 3구역 + 공용 카카오 지도 | 완성·커밋 대기 |
-| `middleware.ts` | 배포에서 `/admin/*`·`/api/admin/*` 하드 404 차단 | 완성·커밋 대기 |
+| `components/admin-workbench.tsx` (+`.module.css`) | 상태별 카드 3구역 + 공용 카카오 지도 + 쓰기 컨트롤 3종 | 보기 커밋됨 / 쓰기 미커밋 |
+| `middleware.ts` | 배포에서 `/admin/*`·`/api/admin/*` 하드 404 차단 | 커밋됨 |
+| `lib/workbench-write.ts` | 작업대 쓰기 로직 + 원격 클라이언트(`createWorkbenchClient`, .env.remote.local) | 완성·미커밋 |
+| `app/api/admin/workbench/{approve,categories,grade}/route.ts` | 승인 저장 / 카테고리 동기화 / 수동 등급 API | 완성·미커밋 |
 
 ### 데이터/설정
 | 파일 | 역할 | 비고 |
@@ -130,6 +135,13 @@
    - UI는 **CSS 모듈로 격리**(전역 디자인 무손상). shadcn 아님 — 기존 전역 CSS 어휘(`admin-page` 등) + 모듈 병용.
    - **보안 이중 잠금**: ① 페이지 `isDemoAdminEnabled()` + `notFound()` ② `middleware.ts`가 배포(production)에서 `/admin/*`·`/api/admin/*`를 **요청 단계에서 진짜 404**로 차단. 둘 다 허용 조건은 `NODE_ENV!=="production" || ENABLE_DEMO_ADMIN==="true"`(=로컬 dev에서만).
    - 검증: `npm run dev`로 `/admin/workbench` 정상 렌더(콘솔 에러 0, 스크린샷). 운영 사이트에서 동일 가드 admin 페이지는 내용 미노출(not-found) 확인 — 미들웨어로 상태코드까지 하드 404로 강화. 지도는 Kakao JS 키 도메인 미등록 시 graceful 폴백.
+7. **관리자 작업대 2단계(쓰기 3종) 완성** — 카테고리 지정 / 승인 저장 / 수동 등급부여.
+   - 새 파일: `lib/workbench-write.ts`(쓰기 로직 + 원격 클라이언트), `app/api/admin/workbench/{approve,categories,grade}/route.ts`. `components/admin-workbench.tsx`에 카드 컨트롤 추가, `lib/workbench.ts`에 DB 상태(저장여부·기존카테고리·현재등급) 읽기 첨부.
+   - 카테고리: 6종 체크박스 + 이름기반 "추정" 힌트(자동저장 X, 최종 선택은 사람) + add/remove 동기화. 승인: 확인→approve API(브랜드+location active, 멱등). 등급: D/C/B/A 토글 → 뺑드미 동일 구조로 verification_records 기록. 모든 쓰기 window.confirm 1회. 저장 안 된 빵집은 카테고리·등급 비활성(스키마상 location_id 필요).
+   - **DB 연결 이슈 발견·해결**: dev 앱(`.env.local`)=로컬 Supabase(127.0.0.1), 파이프라인 스크립트=원격. 작업대만 원격을 보도록 `createWorkbenchClient()`(`.env.remote.local`) 추가 → 사용자 결정(원격 연결)대로 적용. 앱 나머지는 로컬 그대로.
+   - 테스트: (로컬DB) 베리스베어 승인→카테고리→등급 end-to-end 통과. (원격 전환 후) 스택베이커리가 `저장됨`으로 표시, 카테고리 케이크+등급 C 적용·반영 확인 후 라이브 보호 위해 되돌림(미정/D). 멱등·입력방어(400) OK.
+   - dev 서버 turbopack 스테일 청크로 한 번 에러 → 재시작으로 해결. (참고: 베리스베어 테스트행은 로컬 샌드박스 DB에만 남음.)
+8. **작업대 지도 켜짐 → 작업대 완전 완성.** 카카오 디벨로퍼스 > 앱 설정 > 플랫폼 > Web 사이트 도메인에 `http://localhost:3000` 등록(카카오 사이트 설정, 코드 변경 없음). 카드+지도+카테고리+승인+등급 모두 동작 확인. 다음 과제: 검증등급 자동화(교차검증), 대량 수집.
 
 ### 2026-06-24
 1. **배포 Supabase 연결 실패 해결**

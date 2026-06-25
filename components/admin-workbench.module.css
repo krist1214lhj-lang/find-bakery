@@ -175,3 +175,149 @@
   font-size: 0.82rem;
   overflow-x: auto;
 }
+
+/* ── 카드 컨트롤 (승인 / 카테고리 / 등급) ───────────────── */
+.headRight { display: flex; align-items: center; gap: 8px; }
+
+.mapBtn {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--flour-200, #e6dfce);
+  background: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mapBtn:hover { background: var(--flour-100, #f3ecdd); }
+
+.controlRow { margin-top: 12px; }
+
+.savedBadge {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1f7a43;
+  background: #e7f6ec;
+  border: 1px solid #bfe6cd;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.approveBtn {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  background: #2faa63;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.approveBtn:hover { background: #268a51; }
+.approveBtn:disabled { opacity: 0.6; cursor: default; }
+
+.controlBlock {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--flour-200, #e6dfce);
+}
+
+.controlLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-800, #43392b);
+  margin-bottom: 8px;
+}
+
+.suggest { font-weight: 500; font-size: 0.76rem; color: #8a6a3a; }
+.suggestMuted { font-weight: 500; font-size: 0.76rem; color: var(--ink-500, #8b8270); }
+.curGrade { font-weight: 500; font-size: 0.76rem; color: var(--ink-500, #8b8270); }
+
+.linkBtn {
+  margin-left: 8px;
+  font-size: 0.74rem;
+  background: none;
+  border: none;
+  color: #b06a1f;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+.linkBtn:disabled { color: var(--ink-400, #a99f8c); cursor: default; text-decoration: none; }
+
+.catRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.catChk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+}
+.catDisabled { color: var(--ink-400, #a99f8c); cursor: default; }
+
+.saveBtn {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #fff;
+  border: 1px solid #c08a3e;
+  color: #9a6a1f;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.saveBtn:hover:not(:disabled) { background: #fbf2e3; }
+.saveBtn:disabled { opacity: 0.5; cursor: default; border-color: var(--flour-200, #e6dfce); color: var(--ink-400, #a99f8c); }
+
+.gradeRow { display: flex; gap: 6px; }
+
+.gradeBtn {
+  width: 36px;
+  height: 34px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid var(--flour-200, #e6dfce);
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.gradeBtn:hover:not(:disabled) { background: var(--flour-100, #f3ecdd); }
+.gradeBtn:disabled { opacity: 0.5; cursor: default; }
+.gradeBtnActive {
+  background: #2b2620;
+  color: #fff;
+  border-color: #2b2620;
+}
+
+.disabledNote {
+  margin-left: 10px;
+  font-size: 0.74rem;
+  color: var(--ink-400, #a99f8c);
+}
+
+.msgOk {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: #1f7a43;
+  background: #e7f6ec;
+  border-radius: 8px;
+  padding: 7px 10px;
+}
+.msgErr {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: #b23b34;
+  background: #fdeceb;
+  border-radius: 8px;
+  padding: 7px 10px;
+}
