@@ -41,6 +41,22 @@
 - **자동화 5단계 + 관리자 작업대(지도 포함) 전부 완성·커밋·push 완료.** 현재 진행 중 작업 없음 — 다음은 "다음 할 일" 참고.
 - 미커밋: `next-env.d.ts`(자동 생성, 커밋 제외).
 
+## 🧪 로컬 개발 DB 모드 (2026-06-26)
+
+> 로컬 dev 서버가 어느 Supabase를 보는지. `.env.local`은 gitignored(값은 문서·커밋에 없음).
+
+- **현재 = B: 원격(라이브) 읽기 전용.** Docker 없이 항상 켜짐 + production과 같은 데이터(베리스베어 등) 확인 가능. 이유: 로컬 Supabase(Docker)가 꺼져 `fetch failed`가 났고, 매번 켜는 번거로움 회피.
+  - 전환 방법: `node scripts/switch-env-remote.mjs` — `.env.local`의 로컬값을 `# [LOCAL-BACKUP]` 주석으로 보존하고, `NEXT_PUBLIC_SUPABASE_URL`=원격 / `ANON`=원격 anon 키 / **`SUPABASE_SECRET_KEY`·`SERVICE_ROLE`=비움(쓰기 차단)** 으로 바꿈. anon 키는 `npx supabase login` 후 CLI(`projects api-keys`)로 받아 직접 기록(화면 미출력).
+  - **안전장치**: 공개 클라이언트는 anon+RLS라 읽기만. secret 비움 → 앱의 관리자/서버 쓰기 클라이언트 비활성 → dev에서 실데이터 못 바꿈. (작업대·`approve-and-save.mjs`는 원래 `.env.remote.local`로 따로 동작 — 무관.)
+
+- **A로 되돌리기 (로컬 Docker, 대량 쓰기·마이그레이션·파이프라인 테스트 시 권장):**
+  1. `.env.local`에서 `# === [원격 읽기전용 전환] BEGIN … END ===` 블록 삭제 + `# [LOCAL-BACKUP] ` 접두어를 떼서 로컬값 복원.
+  2. Docker Desktop 실행(설정에서 로그인 시 자동시작 켜두면 편함).
+  3. `npx supabase start` (포트 54321 기동, migration + `seed.sql` 자동 적용). 확인: `npx supabase status`.
+  4. `npm run dev` → `.env.local`이 `http://127.0.0.1:54321`을 가리키므로 로컬 DB 사용.
+  - 끄기: `npx supabase stop`(데이터 보존).
+- ⚠️ B(원격)에서는 절대 대량 쓰기/마이그레이션 테스트 금지 → 그땐 A로.
+
 ## 🐞 알려진 버그
 - (없음) ✅ **저장된 빵집이 카카오 후보로 중복 표시** 버그는 2026-06-26 해결 — `buildExploreMapItems`에서 placeId 일치(빵집 slug=`kakao-<id>` ↔ 후보 `externalId`) 최우선 제외, 없으면 이름·주소·전화·좌표 점수 ≥55(신호 2개 이상)일 때만 제외. 안전 우선이라 단일 신호로는 안 거름. 안내 문구도 제거 후 실제 개수로 보정. 실데이터(베리스베어, slug=`kakao-1512893541`) 확인.
 
