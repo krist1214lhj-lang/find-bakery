@@ -97,10 +97,18 @@ export function ExploreWorkspace({
         setCandidates(payload.places);
         setAppliedBounds(undefined);
         setSelectedId(undefined);
+        // 이미 저장된 빵집과 겹치는 후보는 목록에서 빠지므로,
+        // 안내 문구도 중복 제거 후 실제로 보여줄 후보 수로 센다(제거 전 개수 X).
+        const visibleCandidateCount = buildExploreMapItems(
+          bakeries,
+          payload.places,
+        ).filter((item) => item.kind === "candidate").length;
         setMessage(
-          payload.places.length > 0
-            ? `미검증 카카오 후보 ${payload.places.length}곳을 함께 표시합니다.`
-            : "조건에 맞는 카카오 장소를 찾지 못했어요.",
+          payload.places.length === 0
+            ? "조건에 맞는 카카오 장소를 찾지 못했어요."
+            : visibleCandidateCount === 0
+              ? "" // 검색 결과가 전부 이미 등록된 빵집 → 후보 안내 문구는 숨김
+              : `미검증 카카오 후보 ${visibleCandidateCount}곳을 함께 표시합니다.`,
         );
       } catch (cause) {
         setCandidates([]);
@@ -113,7 +121,7 @@ export function ExploreWorkspace({
         setLoading(false);
       }
     },
-    [],
+    [bakeries],
   );
 
   useEffect(() => {
