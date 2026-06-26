@@ -321,3 +321,71 @@
   border-radius: 8px;
   padding: 7px 10px;
 }
+
+/* ── 정밀 검증 (웹검색) ── */
+.researchBox {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--flour-200, #e6dfce);
+  border-radius: 10px;
+  background: var(--flour-100, #f7f2e7);
+}
+.researchHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+.proposed {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #2b2620;
+}
+.confidence {
+  font-size: 0.72rem;
+  color: var(--ink-400, #a99f8c);
+}
+.costTag {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: #7a5b1f;
+  background: #f6ecd6;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.rationale {
+  margin: 8px 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-600, #4a4034);
+}
+.srcList {
+  margin: 0 0 10px;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+.srcList a { color: #6b4e9e; text-decoration: underline; }
+.srcSummary { color: var(--ink-400, #a99f8c); }
+
+.catSuggest {
+  margin: 6px 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px dashed var(--flour-200, #e6dfce);
+}
+.catSuggestHead { font-size: 0.8rem; }
+.catSuggestHead strong { color: #7a5b1f; }
+.catEvList {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.75rem;
+  color: var(--ink-600, #4a4034);
+}

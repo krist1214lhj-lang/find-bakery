@@ -4,6 +4,11 @@ import { useMemo, useState } from "react";
 import { KakaoMap } from "@/components/kakao-map";
 import type { ExploreMapItem } from "@/lib/explore-map";
 import type { WorkbenchData, WorkbenchDecision, WorkbenchItem } from "@/lib/workbench";
+import {
+  VERIFY_MODEL,
+  estimatedCostKrw,
+  type ResearchResult,
+} from "@/lib/verification-research-core";
 import styles from "./admin-workbench.module.css";
 
 type Props = WorkbenchData & { mapApiKey?: string };
@@ -207,7 +212,10 @@ function WorkbenchCard({
     new Set(item.existingCategorySlugs),
   );
   const [grade, setGrade] = useState<string | null>(item.currentGrade);
-  const [busy, setBusy] = useState<"" | "approve" | "categories" | "grade">("");
+  const [busy, setBusy] = useState<
+    "" | "approve" | "categories" | "grade" | "verify" | "apply"
+  >("");
+  const [research, setResearch] = useState<ResearchResult | null>(null);
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
   const suggested = useMemo(() => suggestCategories(item.name), [item.name]);
@@ -295,6 +303,72 @@ function WorkbenchCard({
       setMessage({ kind: "ok", text: `등급 '${result.grade}' 기록됨 (${new Date(result.checkedAt).toLocaleDateString("ko-KR")})` });
     } catch (e) {
       setMessage({ kind: "err", text: e instanceof Error ? e.message : "등급 부여 실패" });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function onVerify() {
+    if (busy) return;
+    setBusy("verify");
+    setMessage(null);
+    try {
+      const result = (await postJson("/api/admin/workbench/verify", {
+        name: item.name,
+        region: null,
+        roadAddress: item.roadAddress,
+        category: item.category,
+        placeUrl: item.placeUrl,
+      })) as ResearchResult;
+      setResearch(result);
+      // 추천 카테고리는 기존 선택을 지우지 않고 "미리 체크"만 한다(사용자가 수정·저장).
+      if (result.categories.length > 0) {
+        setSelectedCats(
+          (prev) => new Set([...prev, ...result.categories.map((c) => c.slug)]),
+        );
+      }
+      const catNote = result.categories.length
+        ? ` · 추천 카테고리 ${result.categories.length}개(체크박스 반영)`
+        : "";
+      setMessage({
+        kind: "ok",
+        text: `정밀 검증 완료 · 실비 약 ${result.costKrw}원 (웹검색 ${result.searchCount}회)${catNote}`,
+      });
+    } catch (e) {
+      setMessage({ kind: "err", text: e instanceof Error ? e.message : "정밀 검증 실패" });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function onApplyResearch() {
+    if (busy || !locationId || !research?.proposedGrade) return;
+    const g = research.proposedGrade;
+    if (
+      !window.confirm(
+        `정밀 검증 제안 등급 '${g}'를 적용할까요?\n\n${item.name}\n(출처·근거와 함께 verification_records에 기록됩니다)`,
+      )
+    )
+      return;
+    setBusy("apply");
+    setMessage(null);
+    try {
+      const result = (await postJson("/api/admin/workbench/grade", {
+        locationId,
+        grade: g,
+        evidence: {
+          rationale: research.rationale,
+          confidence: research.confidence,
+          sources: research.sources,
+        },
+      })) as { grade: string; checkedAt: string };
+      setGrade(result.grade);
+      setMessage({
+        kind: "ok",
+        text: `등급 '${result.grade}' 적용됨(증거 기록) (${new Date(result.checkedAt).toLocaleDateString("ko-KR")})`,
+      });
+    } catch (e) {
+      setMessage({ kind: "err", text: e instanceof Error ? e.message : "등급 적용 실패" });
     } finally {
       setBusy("");
     }
@@ -390,6 +464,98 @@ function WorkbenchCard({
           {busy === "categories" ? "저장 중…" : "카테고리 저장"}
         </button>
         {!canWrite ? <span className={styles.disabledNote}>승인(저장) 후 지정 가능</span> : null}
+      </div>
+
+      {/* ── [기능4] 정밀 검증 (웹검색) ───────────── */}
+      <div className={styles.controlBlock}>
+        <div className={styles.controlLabel}>
+          정밀 검증 (웹검색)
+          <span className={styles.suggestMuted}>
+            {VERIFY_MODEL} · 약 {estimatedCostKrw()}원/회
+          </span>
+        </div>
+        <button
+          type="button"
+          className={styles.saveBtn}
+          disabled={busy !== ""}
+          onClick={onVerify}
+        >
+          {busy === "verify" ? "검증 중… (수 초)" : "정밀 검증 실행"}
+        </button>
+        {research ? (
+          <div className={styles.researchBox}>
+            <div className={styles.researchHead}>
+              제안 등급:{" "}
+              <strong className={styles.proposed}>
+                {research.proposedGrade ?? "제안 없음 (D 유지)"}
+              </strong>
+              <span className={styles.confidence}>확신도 {research.confidence}</span>
+              <span className={styles.costTag}>실비 약 {research.costKrw}원</span>
+            </div>
+            <p className={styles.rationale}>{research.rationale}</p>
+            {research.sources.length > 0 ? (
+              <ul className={styles.srcList}>
+                {research.sources.map((s) => (
+                  <li key={s.url}>
+                    <a href={s.url} target="_blank" rel="noreferrer">
+                      [{s.kind}] {s.title}
+                    </a>
+                    {s.summary ? (
+                      <span className={styles.srcSummary}> — {s.summary}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.suggestMuted}>찾은 출처 없음</p>
+            )}
+            {research.categories.length > 0 ? (
+              <div className={styles.catSuggest}>
+                <div className={styles.catSuggestHead}>
+                  추천 카테고리:{" "}
+                  <strong>
+                    {research.categories
+                      .map(
+                        (c) =>
+                          CATEGORIES.find((x) => x.slug === c.slug)?.label ?? c.slug,
+                      )
+                      .join(" · ")}
+                  </strong>
+                  <span className={styles.suggestMuted}>
+                    {" "}
+                    (아래 체크박스에 미리 반영됨 — 수정 후 “카테고리 저장”)
+                  </span>
+                </div>
+                <ul className={styles.catEvList}>
+                  {research.categories.map((c) => (
+                    <li key={c.slug}>
+                      {CATEGORIES.find((x) => x.slug === c.slug)?.label ?? c.slug} —
+                      근거: {c.evidence}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className={styles.suggestMuted}>추천 카테고리: 미정 (웹 근거 없음)</p>
+            )}
+            {research.proposedGrade ? (
+              canWrite ? (
+                <button
+                  type="button"
+                  className={styles.approveBtn}
+                  disabled={busy !== ""}
+                  onClick={onApplyResearch}
+                >
+                  {busy === "apply"
+                    ? "적용 중…"
+                    : `이 등급(${research.proposedGrade}) 적용`}
+                </button>
+              ) : (
+                <span className={styles.disabledNote}>승인(저장) 후 적용 가능</span>
+              )
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {/* ── [기능3] 등급 ─────────────────────────── */}

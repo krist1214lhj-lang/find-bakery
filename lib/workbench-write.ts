@@ -277,9 +277,17 @@ export async function setLocationCategories(
   return [...want];
 }
 
+// 정밀 검증(웹검색)으로 등급을 "적용"할 때 함께 기록하는 증거.
+export type GradeEvidence = {
+  rationale?: string;
+  confidence?: string;
+  sources?: { title?: string; url?: string; kind?: string }[];
+};
+
 export async function setManualGrade(
   locationId: string,
   grade: string,
+  evidence?: GradeEvidence | null,
 ): Promise<{ grade: ManualGrade; checkedAt: string }> {
   const sb = createWorkbenchClient();
   if (!sb) throw new Error("원격 Supabase(.env.remote.local) 설정이 필요합니다.");
@@ -294,12 +302,18 @@ export async function setManualGrade(
     now.getTime() + (GRADE_REVIEW_DAYS[g] ?? 30) * 86_400_000,
   ).toISOString();
 
+  const isAuto = Boolean(evidence);
+  const topUrl =
+    evidence?.sources?.find((s) => s.url)?.url?.trim() || null;
+  const rationale = (evidence?.rationale ?? "").trim();
+
   // 뺑드미와 동일 구조: 출처(sources) 1행 → 검증기록(verification_records)
   const { data: src, error: sErr } = await sb
     .from("sources")
     .insert({
       type: "other",
-      publisher: "관리자 수동 등급 부여",
+      publisher: isAuto ? "정밀 검증 (웹검색)" : "관리자 수동 등급 부여",
+      url: topUrl,
       retrieved_at: verifiedAt,
       status: "accessible",
     })
@@ -310,14 +324,27 @@ export async function setManualGrade(
   const { error: vErr } = await sb.from("verification_records").insert({
     location_id: locationId,
     field: "business_hours",
-    normalized_value: { manualGrade: g, by: "admin-workbench" },
+    normalized_value: isAuto
+      ? {
+          autoGrade: g,
+          by: "admin-workbench-research",
+          confidence: evidence?.confidence ?? null,
+          rationale: rationale || null,
+          sources: (evidence?.sources ?? [])
+            .filter((s) => s.url)
+            .slice(0, 5)
+            .map((s) => ({ title: s.title ?? null, url: s.url, kind: s.kind ?? null })),
+        }
+      : { manualGrade: g, by: "admin-workbench" },
     source_id: src.id,
-    source_authority: "secondary",
+    source_authority: isAuto && g === "A" ? "official" : "secondary",
     result: "confirmed",
     grade: g,
     verified_at: verifiedAt,
     next_review_at: nextReviewAt,
-    note: "관리자 수동 등급 부여 (작업대)",
+    note: isAuto
+      ? `정밀검증(웹) 등급 — ${rationale ? rationale.slice(0, 180) : "교차확인"}`
+      : "관리자 수동 등급 부여 (작업대)",
   });
   if (vErr) throw new Error(`검증기록 생성 실패: ${vErr.message}`);
 
