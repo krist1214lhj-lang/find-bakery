@@ -29,7 +29,9 @@
 **2026-06-26**
 - **중복표시 버그 수정 완료** — 탐색(explore)에서 저장된 빵집이 카카오 "미검증 후보"로도 떠 중복 표시되던 문제 해결. `lib/explore-map.ts`의 `buildExploreMapItems`에 dedup 추가: **① placeId 일치 최우선**(빵집 slug=`kakao-<id>` ↔ 카카오 후보 `externalId`, 같으면 무조건 같은 가게로 보고 후보 제외 — 오판 0) → **② placeId 없을 때만 이름·주소·전화·좌표 점수 ≥ 55(신호 2개 이상)**. 안전 우선: 단일 신호(이름만/주소만/좌표만)로는 안 거르고 남김 → 다른 빵집을 잘못 숨기지 않음. 빵집(verified)은 그대로, 겹치는 후보만 제외. 기존 검증 매처 `findPossibleDuplicateLocations` 재사용.
 - **안내 문구도 보정** — `explore-workspace.tsx`에서 "미검증 카카오 후보 N곳" 문구를 **중복 제거 후 실제 표시 개수**로 세도록 변경. 후보가 전부 중복이라 0곳이면 문구 숨김.
-- **검증**: 단위테스트 4종 추가(`explore-map.test.ts`) → 전체 61개 통과 / 타입체크·린트 OK. **실데이터 베리스베어**(slug=`kakao-1512893541`)로 확인: 라이브 카카오 후보(id=`1512893541`)가 제거되어 병합 결과 빵집 1 + 후보 0(중복 사라짐). **DB·API·`quest_` 변경 0.**
+- **검증**: 단위테스트 4종 추가(`explore-map.test.ts`) → 전체 통과 / 타입체크·린트 OK. **실데이터 베리스베어**(slug=`kakao-1512893541`)로 확인: 라이브 카카오 후보(id=`1512893541`)가 제거되어 병합 결과 빵집 1 + 후보 0(중복 사라짐). **DB·API·`quest_` 변경 0.**
+- **→ main 배포 반영 완료**: 중복 수정 3파일만 `main` 기준 새 브랜치에 얹어 **PR #3(squash, `0a98363`) 머지 → Vercel production 배포.** preview에서 베리스베어 1개만 확인 후 머지. (production은 `main` 기준이라 코드 변경은 main 머지해야 반영됨 — 이게 그동안 배포에 안 보이던 이유였음.)
+- **로컬 dev DB = 원격 읽기전용 전환 완료**: 로컬 Supabase(Docker) 꺼져 `fetch failed` 나던 문제 해결. `scripts/switch-env-remote.mjs`로 `.env.local`을 원격 URL+anon(읽기)으로, **secret 비워 쓰기 차단**(실데이터 보호). 로컬 원래값은 `[LOCAL-BACKUP]` 주석 보존. 대량 쓰기·마이그레이션 땐 로컬 Docker(`npx supabase start`)로 되돌리기 — 자세히는 `WORKLOG.md`. (전환 커밋 `7ba32ac`는 `codex/map-list-sync`에 로컬, push 미정.)
 
 ## 자동화 전체 그림 (5단계 전부 완성)
 ```
@@ -78,7 +80,8 @@
 - 커밋은 관련 파일만·한글 메시지, push는 별도 승인. `next-env.d.ts`는 커밋 제외.
 
 ## 열린 항목
-- ✅ **해결**: 탐색(explore) 저장 빵집 카카오 후보 **중복 표시** 버그 → 2026-06-26 dedup으로 수정(placeId 최우선 + 점수 ≥55).
+- ✅ **해결·배포**: 탐색(explore) 저장 빵집 카카오 후보 **중복 표시** 버그 → 2026-06-26 dedup 수정(placeId 최우선 + 점수 ≥55) → **PR #3로 `main` 머지·production 배포 반영 완료**.
+- **배포 구조**: production = `main` 브랜치. `codex/map-list-sync`의 코드 변경은 **main 머지(PR)** 해야 배포됨(작업대·자동화 등은 아직 main 미반영, 의도적). 로컬 `7ba32ac`(원격전환)는 push 미정.
 - **결정**: `insane-search` 보류 → 검증등급 자동화는 **Claude API 웹검색 + 카카오 API**로.
 - **DB 상태**: 스택베이커리(slug=`kakao-78696240`) active 저장. 재실행해도 중복 안 들어감.
 - 자동수집 빵집 **미검증(D 수준)** + **카테고리 미정** → 작업대로 보완.
