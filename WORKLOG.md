@@ -43,7 +43,8 @@
 | `0a98363` | **PR #3 squash → `main` 배포 반영** (중복 수정 explore 3파일만) | ✅ `main` |
 | `03ef826` | 2차 검증 **25건 분할호출 + 배치내 placeId 중복제거** 보강 + 대량수집 1라운드 일지 | ❌ (로컬, push 미정) |
 | `64ccf45` | 작업대 카테고리 **이름추정 자동 미리체크** + HANDOFF 갱신 | ❌ (로컬, push 미정) |
-| (이번) | `approve-and-save.mjs` **`--approve all`** 추가 + 90곳 승인완료·일지 | ❌ (로컬, push 미정) |
+| `e8b5733` | `approve-and-save.mjs` **`--approve all`** 추가 + 90곳 승인완료·일지 | ❌ (로컬, push 미정) |
+| (이번) | 탐색 "지도에서 보기" → **단일 핀 포커스**(+setLevel 확대) | ❌ (로컬, push 미정) |
 
 ---
 
@@ -151,6 +152,7 @@
 2. **작업대 카테고리 이름추정 자동 미리체크 구현** — `components/admin-workbench.tsx`. 신규(미저장) 빵집은 이름에 `CAT_KEYWORDS` 단서 있으면 체크박스 미리체크, 저장된 빵집은 DB값 유지. `CAT_KEYWORDS` 크루아상에 "크루아쌍" 추가. 90곳 중 **13곳 이름매칭**(베이글3·구움과자4·케이크2·소금빵2·크루아상2), 77곳 미정. typecheck/lint + dev SSR 체크박스 13개로 검증. silent DB 쓰기 없음. (커밋 `64ccf45`)
 3. **사용자가 작업대 UI에서 90곳 전부 승인 → 라이브 노출.** `bakery_locations` **10행 → 100행**(2026-06-27 05:08~05:54, 전부 active+published). 1라운드 전량 production 노출. (미검증 D·미정 카테고리 다수 — 정밀검증으로 추후 보완.)
 4. **`approve-and-save.mjs --approve all` 추가** — `parseSelection`에 `all` 분기(승인후보 전체). `--confirm` 게이트·중복재조회·블로커skip·멱등·이름카테고리 자동연결 전부 유지. **멱등 검증**: 이미 저장된 90곳 대상 드라이런이 "저장예정 0 / 건너뜀 90(중복)"로 정상. 다음 라운드 일괄 승인용(`--approve all --confirm`). 정책: 미검증 D등급 자동 노출 수용(사용자 결정).
+5. **탐색(explore) "지도에서 보기" → 단일 핀 포커스** — `components/explore-workspace.tsx` + `components/kakao-map.tsx`. 기존엔 카드 "지도에서 보기"가 `selectedId`만 바꿔 지도에 후보 전부 표시됐음. `focusedId` 상태 + `mapItems`(포커스 시 그 1개만) 추가 → 지도엔 **선택한 핀 1개만**. `KakaoMap`에 `setLevel(4)` 추가로 단일 핀이면 **적당히 확대**(B안). 새 "전체 결과 보기" 버튼/새 검색으로 해제. 목록은 전체 유지. **검증**: typecheck/lint/explore-map 테스트 7종 통과 + **헤드리스 브라우저(gstack)로 왕복 확인**(연남동 검색→카드 클릭 시 뷰=map·전체결과보기 버튼 등장·프리뷰="리틀빅토리"·목록 15 유지 → "전체 결과 보기" 클릭 시 해제). DB·API 변경 0.
 
 ### 2026-06-25
 1. **자동화 2단계(Claude 2차 검증) 완성** — `verify-stage2-claude.mjs`를 **실제 Claude 호출판으로 재작성**.
