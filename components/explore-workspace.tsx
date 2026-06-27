@@ -39,6 +39,7 @@ export function ExploreWorkspace({
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string>();
+  const [focusedId, setFocusedId] = useState<string>();
   const [mapBounds, setMapBounds] = useState<MapBounds>();
   const [appliedBounds, setAppliedBounds] = useState<MapBounds>();
   const [capturingId, setCapturingId] = useState("");
@@ -57,7 +58,15 @@ export function ExploreWorkspace({
     [allItems, appliedBounds],
   );
   const selected =
-    visibleItems.find((item) => item.id === selectedId) ?? visibleItems[0];
+    visibleItems.find((item) => item.id === selectedId) ??
+    allItems.find((item) => item.id === selectedId) ??
+    visibleItems[0];
+  // 카드 "지도에서 보기"로 포커스한 항목이 있으면 지도엔 그 핀 1개만 표시한다.
+  const mapItems = useMemo(() => {
+    if (!focusedId) return visibleItems;
+    const focused = allItems.find((item) => item.id === focusedId);
+    return focused ? [focused] : visibleItems;
+  }, [focusedId, visibleItems, allItems]);
 
   const searchPlaces = useCallback(
     async (
@@ -97,6 +106,7 @@ export function ExploreWorkspace({
         setCandidates(payload.places);
         setAppliedBounds(undefined);
         setSelectedId(undefined);
+        setFocusedId(undefined);
         // 이미 저장된 빵집과 겹치는 후보는 목록에서 빠지므로,
         // 안내 문구도 중복 제거 후 실제로 보여줄 후보 수로 센다(제거 전 개수 X).
         const visibleCandidateCount = buildExploreMapItems(
@@ -304,6 +314,7 @@ export function ExploreWorkspace({
                       className="show-on-map"
                       onClick={() => {
                         setSelectedId(item.id);
+                        setFocusedId(item.id);
                         changeView("map");
                       }}
                       type="button"
@@ -319,6 +330,7 @@ export function ExploreWorkspace({
                     onCapture={captureCandidate}
                     onSelect={() => {
                       setSelectedId(item.id);
+                      setFocusedId(item.id);
                       changeView("map");
                     }}
                     place={item.candidate}
@@ -338,7 +350,7 @@ export function ExploreWorkspace({
         <div className="explore-map-panel">
           <KakaoMap
             apiKey={mapApiKey}
-            items={visibleItems}
+            items={mapItems}
             onBoundsChange={setMapBounds}
             onSelect={setSelectedId}
             selectedId={selected?.id}
@@ -351,6 +363,15 @@ export function ExploreWorkspace({
           >
             이 지역 검색
           </button>
+          {focusedId ? (
+            <button
+              className="clear-map-area"
+              onClick={() => setFocusedId(undefined)}
+              type="button"
+            >
+              전체 결과 보기
+            </button>
+          ) : null}
           {selected ? (
             <div className="map-preview-card">
               <span>
