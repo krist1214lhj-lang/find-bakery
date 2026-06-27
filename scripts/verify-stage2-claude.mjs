@@ -96,11 +96,27 @@ function loadCandidates() {
       });
     }
   }
-  if (candidates.length === 0) {
+  // 배치 내 중복 제거: 인접 동네 검색이 같은 카카오 place 를 중복 반환할 수 있어
+  // place_url 끝의 카카오 id(없으면 이름+도로명)로 한 번만 남긴다.
+  const seen = new Set();
+  const deduped = [];
+  for (const c of candidates) {
+    const idm = (c.place_url || "").match(/\/(\d+)\s*$/);
+    const key = idm ? `id:${idm[1]}` : `nm:${norm(c.name)}|${norm(c.road_address || "")}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(c);
+  }
+  if (deduped.length === 0) {
     console.error("[stage2] 검증할 후보가 없습니다 (1차 통과 매치 0건).");
     process.exit(1);
   }
-  return candidates;
+  if (deduped.length < candidates.length) {
+    console.error(
+      `[stage2] 배치 내 중복 ${candidates.length - deduped.length}건 제거 → ${deduped.length}건.`,
+    );
+  }
+  return deduped;
 }
 
 // ── DB 조회 (읽기 전용) ───────────────────────────────────────
@@ -286,17 +302,6 @@ const pending = results.filter((r) => r.decision === null);
 
 if (pending.length > 0) {
   const apiKey = loadKey("ANTHROPIC_API_KEY", [".env.local", ".env.remote.local"]);
-  const items = pending.map((r, i) => ({
-    index: i,
-    name: r.name,
-    category: r.category,
-    is_franchise: r.is_franchise,
-    road_address: r.road_address,
-    latitude: r.latitude,
-    longitude: r.longitude,
-    ambiguous_flags: r.axes,
-    db_near_match: r.dup_match,
-  }));
 
   if (!apiKey) {
     for (const r of pending) {
@@ -306,28 +311,53 @@ if (pending.length > 0) {
     }
     console.error("[stage2] ANTHROPIC_API_KEY 를 찾지 못해 애매한 건을 모두 '보류'로 처리합니다.");
   } else {
-    try {
-      const byIndex = await reviewWithClaude(items, apiKey);
-      pending.forEach((r, i) => {
-        const o = byIndex.get(i);
-        if (o && ["승인후보", "보류", "제외"].includes(o.decision)) {
-          r.decision = o.decision;
-          r.decided_by = "claude";
-          r.reason = o.reason || "(Claude 판정)";
-        } else {
+    // 애매 건이 많으면 한 번에 받은 응답이 잘려(max_tokens) 전부 '보류'로 떨어질 수 있어
+    // 25건씩 나눠 호출한다(묶음마다 index 는 0부터). 호출 횟수만 늘 뿐 판정 동작은 동일.
+    const CHUNK_SIZE = 25;
+    const groups = [];
+    for (let i = 0; i < pending.length; i += CHUNK_SIZE) {
+      groups.push(pending.slice(i, i + CHUNK_SIZE));
+    }
+    let okGroups = 0;
+    for (const group of groups) {
+      const items = group.map((r, i) => ({
+        index: i,
+        name: r.name,
+        category: r.category,
+        is_franchise: r.is_franchise,
+        road_address: r.road_address,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        ambiguous_flags: r.axes,
+        db_near_match: r.dup_match,
+      }));
+      try {
+        const byIndex = await reviewWithClaude(items, apiKey);
+        group.forEach((r, i) => {
+          const o = byIndex.get(i);
+          if (o && ["승인후보", "보류", "제외"].includes(o.decision)) {
+            r.decision = o.decision;
+            r.decided_by = "claude";
+            r.reason = o.reason || "(Claude 판정)";
+          } else {
+            r.decision = "보류";
+            r.decided_by = "fallback";
+            r.reason = "Claude 응답 누락/형식오류 → 사람확인 필요";
+          }
+        });
+        okGroups++;
+      } catch (e) {
+        for (const r of group) {
           r.decision = "보류";
           r.decided_by = "fallback";
-          r.reason = "Claude 응답 누락/형식오류 → 사람확인 필요";
+          r.reason = `Claude 호출 실패(${e.message.slice(0, 80)}) → 사람확인 필요`;
         }
-      });
-    } catch (e) {
-      for (const r of pending) {
-        r.decision = "보류";
-        r.decided_by = "fallback";
-        r.reason = `Claude 호출 실패(${e.message.slice(0, 80)}) → 사람확인 필요`;
+        console.error(`[stage2] Claude 호출 실패 → 해당 묶음 '보류' 처리: ${e.message}`);
       }
-      console.error(`[stage2] Claude 호출 실패 → 애매한 건 '보류' 처리: ${e.message}`);
     }
+    console.error(
+      `[stage2] Claude 분할 호출: ${okGroups}/${groups.length} 묶음 성공(묶음당 최대 ${CHUNK_SIZE}건).`,
+    );
   }
 }
 
