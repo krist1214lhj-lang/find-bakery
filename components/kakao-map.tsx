@@ -28,6 +28,7 @@ type KakaoMap = {
   panTo(position: KakaoLatLng): void;
   relayout(): void;
   setBounds(bounds: KakaoBounds): void;
+  setLevel(level: number): void;
 };
 
 type KakaoMarker = {
@@ -71,6 +72,9 @@ declare global {
 
 let sdkPromise: Promise<KakaoMaps> | null = null;
 
+// 핀 1개만 표시할 때(카드 "지도에서 보기" 포커스 등) 적당히 확대할 줌 레벨(낮을수록 확대).
+const SINGLE_ITEM_LEVEL = 4;
+
 export function KakaoMap({
   apiKey,
   items,
@@ -112,7 +116,7 @@ export function KakaoMap({
         const center = getMapCenter(itemsRef.current);
         const map = new maps.Map(containerRef.current, {
           center: new maps.LatLng(center.latitude, center.longitude),
-          level: itemsRef.current.length > 1 ? 8 : 4,
+          level: itemsRef.current.length > 1 ? 8 : SINGLE_ITEM_LEVEL,
         });
         mapRef.current = map;
         const idleHandler = () =>
@@ -163,6 +167,8 @@ export function KakaoMap({
     if (items.length > 1) {
       map.setBounds(bounds);
     } else if (items[0]) {
+      // 핀 1개(카드 "지도에서 보기" 포커스 등) → 적당히 확대 후 center
+      map.setLevel(SINGLE_ITEM_LEVEL);
       map.panTo(new maps.LatLng(items[0].latitude, items[0].longitude));
     }
   }, [items, onSelect, status]);
