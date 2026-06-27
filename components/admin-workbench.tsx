@@ -35,7 +35,7 @@ const CATEGORIES: { slug: string; label: string }[] = [
 
 const CAT_KEYWORDS: { slug: string; kws: string[] }[] = [
   { slug: "bagel", kws: ["베이글"] },
-  { slug: "croissant", kws: ["크루아상", "크로와상", "크라상"] },
+  { slug: "croissant", kws: ["크루아상", "크로와상", "크라상", "크루아쌍"] },
   { slug: "salt-bread", kws: ["소금빵"] },
   { slug: "cake", kws: ["케이크", "케익"] },
   { slug: "baked-sweets", kws: ["쿠키", "구움과자", "휘낭시에", "마들렌", "스콘"] },
@@ -209,7 +209,12 @@ function WorkbenchCard({
   const [locationId, setLocationId] = useState<string | null>(item.savedLocationId);
   const [savedSlug, setSavedSlug] = useState<string | null>(item.savedSlug);
   const [selectedCats, setSelectedCats] = useState<Set<string>>(
-    new Set(item.existingCategorySlugs),
+    () =>
+      new Set(
+        item.saved
+          ? item.existingCategorySlugs // 저장됨: DB값 그대로(사람이 정한 것 유지)
+          : [...item.existingCategorySlugs, ...suggestCategories(item.name)], // 신규: 이름추정 미리체크
+      ),
   );
   const [grade, setGrade] = useState<string | null>(item.currentGrade);
   const [busy, setBusy] = useState<
