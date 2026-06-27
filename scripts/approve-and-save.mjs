@@ -3,6 +3,8 @@
 //   1) 목록(저장 안 함):      node scripts/approve-and-save.mjs
 //   2) 선택+미리보기(드라이런): node scripts/approve-and-save.mjs --approve 1,3,5
 //   3) 실제 저장:             node scripts/approve-and-save.mjs --approve 1,3,5 --confirm
+//   4) 전체 저장(승인후보 전부): node scripts/approve-and-save.mjs --approve all --confirm
+//      (전체 미리보기는 --confirm 빼고: --approve all)
 //   (입력 파일 바꾸려면 경로를 위치 인자로: ... output/stage2-verified.json)
 //
 // 입력: output/stage2-verified.json 중 decision==="승인후보" 만 대상.
@@ -84,6 +86,10 @@ function parseArgs() {
 }
 
 function parseSelection(spec, max) {
+  // "all" → 승인후보 전체 선택
+  if (spec.trim().toLowerCase() === "all") {
+    return Array.from({ length: max }, (_, i) => i + 1);
+  }
   // "1,3,5" 또는 "1-4,7" 지원
   const picked = new Set();
   for (const part of spec.split(",").map((s) => s.trim()).filter(Boolean)) {
@@ -227,7 +233,8 @@ if (!approve) {
     console.log(`     생성 slug: ${p.slug || "(불가)"}`);
   });
   console.log(`\n다음 단계: node scripts/approve-and-save.mjs --approve 1,3,5   (선택 후 미리보기)`);
-  console.log(`         그 다음:  ... --approve 1,3,5 --confirm            (실제 저장)\n`);
+  console.log(`         그 다음:  ... --approve 1,3,5 --confirm            (실제 저장)`);
+  console.log(`         전체:     ... --approve all [--confirm]            (승인후보 전부)\n`);
   process.exit(0);
 }
 
