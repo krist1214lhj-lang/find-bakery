@@ -8,7 +8,7 @@
 ## 📌 현재 상태 (2026-06-27 기준)
 
 - **브랜치:** `codex/map-list-sync`
-- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨(중복 수정은 PR #3로 반영 완료).
+- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨(중복 수정은 PR #3, 탐색 단일 핀 포커스는 PR #4로 main 반영 완료).
 - **배포 연결 문제 해결됨:** 케이크·식사빵 등 카테고리 정상 노출 확인
 - **뺑드미 아차산점**: DB에 추가 완료 + 좌표를 카카오 검증값으로 교정 완료
 - **자동화 1단계(카카오 1차 검증)**: 스크립트 완성·커밋·push
@@ -22,6 +22,7 @@
 - **대량수집 1라운드 완료(2026-06-27) — 6개 동네 90곳 수집·2차검증, 전부 승인후보**: 연남동·망원동·성수동·서촌·한남동·익선동 각 카카오 "빵집" 검색 15곳 → 합 90곳. 2차 결과 **승인후보 90 / 보류 0 / 제외 0**(전부 카카오 제과·베이커리 카테고리 + 기존 DB 10곳과 무중복 → 규칙으로 확정, **Claude 호출 0건 = 2차 비용 0원**). 프랜차이즈 3곳은 표시만(제외 아님). **DB 저장 안 함** — `output/stage2-verified.json`만 생성, 작업대(`/admin/workbench`)에서 승인·카테고리·정밀검증 등급 부여 예정. 2차 스크립트에 **25건 분할 호출 + 배치내 placeId 중복제거** 보강(이번엔 무발동, 다음 대량 라운드 대비).
 - **대량수집 1라운드 승인 완료(2026-06-27) — 90곳 전부 작업대 UI로 저장·라이브 노출.** 사용자가 `/admin/workbench`에서 90곳을 직접 승인 → `bakery_locations` **10행 → 100행**(전부 `status=active`+`published_at`, 05:08~05:54 생성). 카테고리는 이름매칭 13곳 위주, 나머지 미정. 등급 미검증(D) — 원하는 곳만 정밀검증 예정.
 - **`approve-and-save.mjs`에 `--approve all` 추가(2026-06-27)** — `parseSelection`에 `all` 분기(3줄), 승인후보 전체 선택. `--confirm` 게이트·중복 재조회·블로커 skip·멱등 전부 유지. 이름매칭 카테고리 자동연결 동일. **멱등 검증**: 1라운드 90곳이 이미 저장돼 있어 `--approve all` 드라이런이 "저장예정 0 / 건너뜀 90(중복)"로 정상 동작 확인. 다음 대량 라운드 일괄 승인용.
+- **탐색 "지도에서 보기" → 단일 핀 포커스(2026-06-27) → PR #4로 main 배포 반영.** 탐색 결과 카드 "지도에서 보기" 클릭 시 지도에 후보 전부 대신 **선택 핀 1개만**(+`setLevel(4)` 확대), "전체 결과 보기"/새 검색으로 해제, 목록은 전체 유지. 코드 2파일(`explore-workspace.tsx`·`kakao-map.tsx`, +30/-3). **PR #4(squash `e174d5a`) → main → Vercel production.** typecheck/lint/테스트 + 헤드리스(gstack) 왕복 검증 완료.
 
 ### 커밋 현황
 | 커밋 | 내용 | 원격 push |
@@ -39,12 +40,13 @@
 | `df80d5a` | 작업대 2단계: 쓰기 3종(승인·카테고리·등급) + 원격 연결 + 일지 | ✅ |
 | `16b0515` | 일지 갱신(작업대 완성·insane-search 보류·버그 기록) | ✅ |
 | `8c367f6` | 탐색 화면 저장 빵집 중복 표시 버그 수정 + 안내 문구 보정 + 일지 | ✅ (codex) |
-| `7ba32ac` | 로컬 dev를 원격 읽기전용 DB로 전환 + 전환 도구 + 일지 | ❌ (로컬, push 미정) |
+| `7ba32ac` | 로컬 dev를 원격 읽기전용 DB로 전환 + 전환 도구 + 일지 | ✅ (codex) |
 | `0a98363` | **PR #3 squash → `main` 배포 반영** (중복 수정 explore 3파일만) | ✅ `main` |
-| `03ef826` | 2차 검증 **25건 분할호출 + 배치내 placeId 중복제거** 보강 + 대량수집 1라운드 일지 | ❌ (로컬, push 미정) |
-| `64ccf45` | 작업대 카테고리 **이름추정 자동 미리체크** + HANDOFF 갱신 | ❌ (로컬, push 미정) |
-| `e8b5733` | `approve-and-save.mjs` **`--approve all`** 추가 + 90곳 승인완료·일지 | ❌ (로컬, push 미정) |
-| (이번) | 탐색 "지도에서 보기" → **단일 핀 포커스**(+setLevel 확대) | ❌ (로컬, push 미정) |
+| `03ef826` | 2차 검증 **25건 분할호출 + 배치내 placeId 중복제거** 보강 + 대량수집 1라운드 일지 | ✅ (codex) |
+| `64ccf45` | 작업대 카테고리 **이름추정 자동 미리체크** + HANDOFF 갱신 | ✅ (codex) |
+| `e8b5733` | `approve-and-save.mjs` **`--approve all`** 추가 + 90곳 승인완료·일지 | ✅ (codex) |
+| `9a031a8` | 탐색 "지도에서 보기" → **단일 핀 포커스**(+setLevel 확대) | ✅ (codex) |
+| `e174d5a` | **PR #4 squash → `main` 배포 반영** (탐색 단일 핀 포커스 2파일) | ✅ `main` |
 
 ---
 
@@ -152,7 +154,7 @@
 2. **작업대 카테고리 이름추정 자동 미리체크 구현** — `components/admin-workbench.tsx`. 신규(미저장) 빵집은 이름에 `CAT_KEYWORDS` 단서 있으면 체크박스 미리체크, 저장된 빵집은 DB값 유지. `CAT_KEYWORDS` 크루아상에 "크루아쌍" 추가. 90곳 중 **13곳 이름매칭**(베이글3·구움과자4·케이크2·소금빵2·크루아상2), 77곳 미정. typecheck/lint + dev SSR 체크박스 13개로 검증. silent DB 쓰기 없음. (커밋 `64ccf45`)
 3. **사용자가 작업대 UI에서 90곳 전부 승인 → 라이브 노출.** `bakery_locations` **10행 → 100행**(2026-06-27 05:08~05:54, 전부 active+published). 1라운드 전량 production 노출. (미검증 D·미정 카테고리 다수 — 정밀검증으로 추후 보완.)
 4. **`approve-and-save.mjs --approve all` 추가** — `parseSelection`에 `all` 분기(승인후보 전체). `--confirm` 게이트·중복재조회·블로커skip·멱등·이름카테고리 자동연결 전부 유지. **멱등 검증**: 이미 저장된 90곳 대상 드라이런이 "저장예정 0 / 건너뜀 90(중복)"로 정상. 다음 라운드 일괄 승인용(`--approve all --confirm`). 정책: 미검증 D등급 자동 노출 수용(사용자 결정).
-5. **탐색(explore) "지도에서 보기" → 단일 핀 포커스** — `components/explore-workspace.tsx` + `components/kakao-map.tsx`. 기존엔 카드 "지도에서 보기"가 `selectedId`만 바꿔 지도에 후보 전부 표시됐음. `focusedId` 상태 + `mapItems`(포커스 시 그 1개만) 추가 → 지도엔 **선택한 핀 1개만**. `KakaoMap`에 `setLevel(4)` 추가로 단일 핀이면 **적당히 확대**(B안). 새 "전체 결과 보기" 버튼/새 검색으로 해제. 목록은 전체 유지. **검증**: typecheck/lint/explore-map 테스트 7종 통과 + **헤드리스 브라우저(gstack)로 왕복 확인**(연남동 검색→카드 클릭 시 뷰=map·전체결과보기 버튼 등장·프리뷰="리틀빅토리"·목록 15 유지 → "전체 결과 보기" 클릭 시 해제). DB·API 변경 0.
+5. **탐색(explore) "지도에서 보기" → 단일 핀 포커스** — `components/explore-workspace.tsx` + `components/kakao-map.tsx`. 기존엔 카드 "지도에서 보기"가 `selectedId`만 바꿔 지도에 후보 전부 표시됐음. `focusedId` 상태 + `mapItems`(포커스 시 그 1개만) 추가 → 지도엔 **선택한 핀 1개만**. `KakaoMap`에 `setLevel(4)` 추가로 단일 핀이면 **적당히 확대**(B안). 새 "전체 결과 보기" 버튼/새 검색으로 해제. 목록은 전체 유지. **검증**: typecheck/lint/explore-map 테스트 7종 통과 + **헤드리스 브라우저(gstack)로 왕복 확인**(연남동 검색→카드 클릭 시 뷰=map·전체결과보기 버튼 등장·프리뷰="리틀빅토리"·목록 15 유지 → "전체 결과 보기" 클릭 시 해제). DB·API 변경 0. → **PR #4(main 기준 새 브랜치 `feat/explore-single-pin-focus`에 2파일만, squash `e174d5a`)로 main 머지 → Vercel production 배포 반영.**
 
 ### 2026-06-25
 1. **자동화 2단계(Claude 2차 검증) 완성** — `verify-stage2-claude.mjs`를 **실제 Claude 호출판으로 재작성**.
