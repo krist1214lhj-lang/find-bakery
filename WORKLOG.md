@@ -83,14 +83,15 @@
 | `6a0662a` | 모바일 홈 가로 스크롤 수정(`html,body overflow-x:hidden` + `.bakery-card position:relative`) | ✅ (codex) |
 | `7f38c8e` | 모바일 explore 목록 가상화(초기 20 + 더 보기) | ✅ (codex) |
 | `867c512` | **PR #5 squash → `main` 배포** (모바일 반응형 2파일) | ✅ `main` |
-| (이번) | 모바일 개선 HANDOFF/WORKLOG 반영 | ❌ (로컬, push 예정) |
+| `3da9fce` | 모바일 개선(PR #5) HANDOFF/WORKLOG 반영 | ✅ (codex) |
+| (이번) | `MAX_TOKENS` 1500→4000(스크립트+core lib) + `VERIFY_MODEL` env + 검증 5곳 일지 | ❌ (로컬, push 예정) |
 
 ---
 
 ## 🔄 진행 중
 
 - **자동화 5단계 + 관리자 작업대(지도 포함) 전부 완성·커밋·push 완료.**
-- **대량수집 1~11라운드 완료 + 제주 검증 파일럿 — `bakery_locations` 1201행, 공개 108 / draft 1093 / verification_needed 1.** 전국 17개 시·도(서울 482·경기 125·제주 96·경남 90·경북 75·전남 47·부산 46·강원 45·전북 44·충남 30·대구 30·대전 16·울산 15·인천 15·세종 15·충북 15·광주 15). **카테고리 미연결분은 `draft` 숨김** — 공개 108곳은 전부 카테고리 보유(이름매칭 + 제주 파일럿 검증 10곳). **재노출 표준 워크플로 확립·확장**(제주 10 + 서울핫플 12 + 강남 8 + 부산·대구·전주 6 = 검증 36곳 공개; `scripts/jeju-pilot.mjs` 선택자 `--areas`/`--region2`/`--districts`로 타 지역 반복). ⚠️ 수집 라운드마다 저장(active) 직후 `hide-uncategorized.mjs --confirm`로 미분류 숨김 재적용 필요.
+- **대량수집 1~11라운드 + 검증 재노출 — `bakery_locations` 1201행, 공개 139 / draft 1062 / verification_needed 1.** 전국 17개 시·도. **카테고리 미연결분은 `draft` 숨김** — 공개 139곳 전부 카테고리 보유(이름매칭 + 검증). **재노출 표준 워크플로**(제주 10 + 서울핫플 12 + 강남 8 + 부산·대구·전주 6 + 광주·대전·수원·인천 5 = **검증 41곳 공개**; `scripts/jeju-pilot.mjs` 선택자 `--areas`/`--region2`/`--districts`, `VERIFY_MODEL` env로 Sonnet 전환). **truncation 근본수정: `MAX_TOKENS` 1500→4000**(스크립트+`lib/verification-research-core.ts`) — 1500은 Sonnet에서 JSON 평결이 잘려 등급 null 떨어지던 false-negative 원인이었음(궁전제과·하레하레가 사례, 4000 후 둘 다 A). ⚠️ 수집 라운드마다 저장(active) 직후 `hide-uncategorized.mjs --confirm` 필요.
 - 미커밋: `next-env.d.ts`(자동 생성, 커밋 제외).
 
 ## 🧪 로컬 개발 DB 모드 (2026-06-26)
@@ -282,6 +283,11 @@
    - **문제2 explore 목록**: 모바일 `@media`에서 목록 패널 `max-height:none`로 134개 전부 쌓임. **수정**: `MOBILE_PAGE_SIZE=20`, `matchMedia(760px)`로 모바일에서만 `visibleItems.slice(0,listLimit)` 렌더 + `.load-more`("더 보기")로 +20, 결과 바뀌면 리셋. 지도 핀(`mapItems`)·데스크톱 전체렌더는 유지. 검증 375px: 66,918→10,892px, 카드 134→20, 더보기·필터리셋·데스크톱 무영향. typecheck 통과. (커밋 `7f38c8e`)
    - **배포**: 두 수정(2파일)을 main 기준 새 브랜치 `feat/mobile-responsive-fixes`에 얹어 **PR #5 → squash `867c512` main 머지·production 배포**(PR #3/#4와 동일 패턴). 작업대·스크립트 등 codex 전용 변경 미포함.
    - 진행하던 광주·대전·수원·인천 검증(후보 5곳, `output/gwangju-daejeon-suwon-incheon-candidates.json`)은 보존 — 4단계(유료)부터 재개 가능.
+16. **광주·대전·수원·인천 검증 4단계 재개 + truncation 근본 수정.**
+   - 후보 5곳 Haiku 정밀검증(364원): **B 3(베비에르 광주·홍종흔 광교·안스 송도) / 보류 2(궁전제과·하레하레)**. B 3곳 먼저 저장(공개 134→137).
+   - **보류 2곳이 명백히 유명**(궁전제과=광주 3대 1973, 하레하레=대전 세계제빵대회 우승)인데 false negative → Sonnet 1차 재검증(`VERIFY_MODEL=claude-sonnet-4-6`, 242원)도 **여전히 보류**. 원인 추적: `rationale`이 기본 폴백 + `sources`가 모델 verdict가 아닌 실제 검색결과로 채워짐 = **최종 JSON 평결 블록이 파싱 안 됨**. `MAX_TOKENS=1500`에 (웹검색 인용+설명+JSON) 출력이 차서 JSON이 잘린 truncation으로 진단.
+   - **근본 수정: `MAX_TOKENS` 1500→4000** — `scripts/jeju-pilot.mjs`(env override `VERIFY_MODEL`도 추가) + 작업대 UI `lib/verification-research-core.ts` 둘 다. 출력 토큰은 실제 생성분만 과금이라 비용 영향 미미.
+   - **수정 후 Sonnet 재검증(380원)** → **궁전제과 A**(디지털광주문화대전·나무위키·광주일보 공식/언론, 공룡알빵·나비파이) + **하레하레 A**(공식 페이스북·또간집 대전 1위, 소금빵·구움과자·케이크·크루아상) → 2곳 저장. **공개 137→139, 미분류 공개 0 유지.** typecheck 통과.
 
 ### 2026-06-27
 1. **대량수집 1라운드(6개 동네) 실행 — 사용자 승인 후 끝까지 자동 진행.**

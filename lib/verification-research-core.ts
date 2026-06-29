@@ -3,7 +3,9 @@
 
 export const VERIFY_MODEL = "claude-haiku-4-5"; // ← 정확도 아쉬우면 "claude-sonnet-4-6"
 export const MAX_SEARCHES = 2; // 웹검색 하드캡(곳당)
-export const MAX_TOKENS = 1500;
+// 1500은 (검색 결과 인용 + 설명 + 최종 JSON 평결) 담기엔 부족 → 특히 Sonnet에서
+// JSON 블록이 잘려 등급이 null로 떨어지는 truncation 발생. 4000으로 상향(실제 생성분만 과금).
+export const MAX_TOKENS = 4000;
 
 // 단가(공식, 2026-05 기준): $ per 1M tokens. 웹검색 $0.01/회.
 const PRICING: Record<string, { input: number; output: number }> = {

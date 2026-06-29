@@ -99,9 +99,12 @@ async function runList() {
 }
 
 // ── 4단계: 정밀검증 (lib/verification-research-core.ts 포팅) ───
-const VERIFY_MODEL = "claude-haiku-4-5";
+const VERIFY_MODEL = process.env.VERIFY_MODEL || "claude-haiku-4-5"; // 예: VERIFY_MODEL=claude-sonnet-4-6 로 정확도↑
 const MAX_SEARCHES = 2;
-const MAX_TOKENS = 1500;
+// 출력 토큰 한도. 1500은 (검색 결과 인용 + 설명 + 최종 JSON 평결)에 부족해
+// 특히 Sonnet에서 설명이 길면 JSON 블록이 잘려 등급이 null로 떨어지는 truncation 발생.
+// 4000으로 상향(실제 생성분만 과금되므로 비용 영향은 거의 없음, JSON 누락 방지).
+const MAX_TOKENS = 4000;
 const PRICING = { "claude-haiku-4-5": { input: 1, output: 5 }, "claude-sonnet-4-6": { input: 3, output: 15 } };
 const WEB_SEARCH_USD = 0.01;
 const USD_TO_KRW = 1450;
