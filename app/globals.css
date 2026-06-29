@@ -33,6 +33,11 @@ html {
     sans-serif;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
 }
@@ -303,6 +308,7 @@ a {
   border-radius: 20px;
   box-shadow: 0 8px 30px rgb(73 45 28 / 6%);
   overflow: hidden;
+  position: relative;
 }
 
 .bakery-image {
