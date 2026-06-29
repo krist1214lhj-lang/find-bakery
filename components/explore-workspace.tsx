@@ -27,6 +27,9 @@ type Props = {
   mapApiKey?: string;
 };
 
+// 모바일 목록은 처음 이만큼만 렌더하고 "더 보기"로 늘린다(긴 페이지/렌더 부담 완화).
+const MOBILE_PAGE_SIZE = 20;
+
 export function ExploreWorkspace({
   bakeries,
   initialQuery = "",
@@ -45,6 +48,15 @@ export function ExploreWorkspace({
   const [capturingId, setCapturingId] = useState("");
   const [capturedIds, setCapturedIds] = useState<string[]>([]);
   const autoSearchStarted = useRef(false);
+  const [listLimit, setListLimit] = useState(MOBILE_PAGE_SIZE);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 760px)");
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const allItems = useMemo(
     () => buildExploreMapItems(bakeries, candidates),
@@ -67,6 +79,11 @@ export function ExploreWorkspace({
     const focused = allItems.find((item) => item.id === focusedId);
     return focused ? [focused] : visibleItems;
   }, [focusedId, visibleItems, allItems]);
+  // 모바일은 목록만 listLimit 까지 렌더(지도 핀은 전체 유지). 결과가 바뀌면 다시 처음부터.
+  const listItems = isMobile ? visibleItems.slice(0, listLimit) : visibleItems;
+  useEffect(() => {
+    setListLimit(MOBILE_PAGE_SIZE);
+  }, [visibleItems]);
 
   const searchPlaces = useCallback(
     async (
@@ -298,8 +315,9 @@ export function ExploreWorkspace({
       <div className="explore-split">
         <div className="explore-list-panel" aria-label="빵집 검색 결과 목록">
           {visibleItems.length > 0 ? (
+            <>
             <div className="explore-unified-list">
-              {visibleItems.map((item) =>
+              {listItems.map((item) =>
                 item.kind === "verified" ? (
                   <div
                     className={
@@ -339,6 +357,18 @@ export function ExploreWorkspace({
                 ),
               )}
             </div>
+            {isMobile && visibleItems.length > listItems.length ? (
+              <button
+                className="load-more"
+                onClick={() =>
+                  setListLimit((value) => value + MOBILE_PAGE_SIZE)
+                }
+                type="button"
+              >
+                더 보기 ({listItems.length}/{visibleItems.length})
+              </button>
+            ) : null}
+            </>
           ) : (
             <div className="empty-state compact">
               <h2>현재 영역에 표시할 빵집이 없어요.</h2>
