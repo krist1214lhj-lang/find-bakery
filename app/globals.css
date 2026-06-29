@@ -758,6 +758,22 @@ a {
   gap: 16px;
 }
 
+.load-more {
+  background: var(--flour-100);
+  border: 1px solid var(--flour-200);
+  border-radius: 14px;
+  color: var(--crust-800);
+  cursor: pointer;
+  font-weight: 800;
+  margin-top: 16px;
+  min-height: 50px;
+  width: 100%;
+}
+
+.load-more:hover {
+  border-color: var(--crust-600);
+}
+
 .map-result-card {
   border: 2px solid transparent;
   border-radius: 22px;
