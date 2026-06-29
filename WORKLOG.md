@@ -26,6 +26,7 @@
 - **대량수집 2라운드 완료·승인(2026-06-27) — 6동네 90곳 수집 → 85곳 라이브 저장.** 합정·상수·부암동·가로수길·을지로·잠실 각 "빵집" 15곳=90 → 2차 **승인후보 85 / 보류 0 / 제외 5**(부암동 5곳은 1라운드 서촌·익선 인근과 중복 → 자동 제외, 예: 튀튀쿠키 약 0m). **Claude 1건 = 약 1.5원**. `--approve all --confirm`로 85곳 일괄 저장(건너뜀 0·실패 0, 이름매칭 카테고리 자동연결 예: 잠실바게트→식사빵), `bakery_locations` **100→185행**. 프랜차이즈 5곳(뚜레쥬르·나폴레옹제과점 등) 표시만. 미검증 D·카테고리 다수 미정 → 정밀검증 추후.
 - **대량수집 3라운드 완료·승인(2026-06-29) — 5동네 75곳 수집 → 61곳 라이브 저장.** 홍대·이태원·압구정·청담·강남 각 "빵집" 15곳=75 → 배치내 placeId 중복 6 제거(69 고유) → 2차 **승인후보 61 / 보류 0 / 제외 8**(전부 기존 DB 중복 약 0m: 홍대·상수권 7곳 + 가로수길 인근 외계인방앗간 본점 등). 전부 카카오 제과·베이커리 카테고리 + 규칙 확정 → **Claude 호출 0건 = 2차 비용 0원**. `--approve all --confirm`로 61곳 일괄 저장(건너뜀 0·실패 0, 이름매칭 카테고리 자동연결 예: 바게트케이→식사빵), `bakery_locations` **185→246행**. 프랜차이즈(파리바게뜨 청담사거리점 등) 표시만. 미검증 D·카테고리 다수 미정 → 정밀검증 추후.
 - **대량수집 4라운드 완료·승인(2026-06-29) — 5동네 75곳 수집 → 48곳 라이브 저장.** 신촌·건대·노원·마포·종로 각 "빵집" 15곳=75 → 2차 **승인후보 49 / 보류 0 / 제외 26**(예상대로 광역 중복 자동제외: 마포=합정·상수·망원·연남, 종로=서촌·익선·을지로, 신촌=연남·홍대, 건대=성수 인근). 전부 규칙 확정 → **Claude 호출 0건 = 2차 비용 0원**. `--approve all --confirm` 저장 시 1곳(나폴레옹과자점 롯데백화점 건대점)이 저장 직전 재조회 중복으로 건너뜀 → **48곳 저장**(실패 0), `bakery_locations` **246→294행**. 프랜차이즈 표시만. 미검증 D·카테고리 다수 미정 → 정밀검증 추후. (신규율 하락: 75곳 중 48곳만 신규 — 서울 주요 권역 상당 부분 커버됨.)
+- **카테고리 미연결 빵집 일괄 숨김(2026-06-29) — `status='draft'`로 공개 294 → 31곳.** `location_bread_categories` 연결 0개인 **263곳**을 `active→draft`(카테고리 ≥1인 **31곳만 공개 유지**). **핵심 발견**: `'hidden'`은 `location_status` enum에 없음(draft/active/temporary_closed/closed/relocated/verification_needed; hidden은 menu_status 전용) → 공개 노출은 RLS **`status<>'draft' AND published_at IS NOT NULL`**가 결정(공개 목록 쿼리 `lib/bakery-repository.ts:146`는 anon 클라이언트+status 필터 없음). 그래서 단일 컬럼 비공개 수단은 `status='draft'`. published_at 보존 → 되돌리기는 status만 active(제약 `active_location_must_be_published` 통과). 새 스크립트 `scripts/hide-uncategorized.mjs`(드라이런/`--confirm`/`--restore <백업>`), 변경 직전 백업 `output/hide-backup-*.json`. 검증: status 분포 active30·verification_needed1·draft263, 공개 31 전부 카테고리 보유·미연결 공개 0. 멱등(이미 draft 제외).
 
 ### 커밋 현황
 | 커밋 | 내용 | 원격 push |
@@ -54,14 +55,15 @@
 | `1930414` | 대량수집 2라운드(6동네 85곳 저장·라이브) + WORKLOG | ✅ (codex) |
 | `75f3ce8` | HANDOFF에 2라운드 반영(DB 185행) + 커밋표 정리 | ✅ (codex) |
 | `f64b3ac` | 대량수집 3라운드(5동네 61곳 저장·라이브, DB 246행) + 일지 | ✅ (codex) |
-| (이번) | 대량수집 4라운드(5동네 48곳 저장·라이브, DB 294행) + 일지 | ❌ (로컬, push 예정) |
+| `2283fcc` | 대량수집 4라운드(5동네 48곳 저장·라이브, DB 294행) + 일지 | ✅ (codex) |
+| (이번) | 카테고리 미연결 263곳 `draft` 숨김(공개 31) + `hide-uncategorized.mjs` + 일지 | ❌ (로컬, push 예정) |
 
 ---
 
 ## 🔄 진행 중
 
 - **자동화 5단계 + 관리자 작업대(지도 포함) 전부 완성·커밋·push 완료.**
-- **대량수집 1·2·3·4라운드 승인 완료 — 라이브 노출 중(`bakery_locations` 294행).** 1R 90곳(작업대 UI 승인) + 2R 85곳 + 3R 61곳 + 4R 48곳(`--approve all --confirm` 자동 승인). 카테고리는 이름매칭만, 다수 미정. 등급 미검증(D) — 원하는 곳만 정밀검증 예정. 다음 라운드도 `approve-and-save.mjs --approve all --confirm`로 일괄 승인.
+- **대량수집 1·2·3·4라운드 승인 완료 — `bakery_locations` 294행.** 1R 90 + 2R 85 + 3R 61 + 4R 48(`--approve all --confirm`). **단, 2026-06-29 카테고리 미연결 263곳을 `draft`로 숨김 → 현재 공개는 31곳(카테고리 보유)만.** 숨긴 263곳은 카테고리 채우면 재노출 가능. 등급 미검증(D) — 원하는 곳만 정밀검증 예정.
 - 미커밋: `next-env.d.ts`(자동 생성, 커밋 제외).
 
 ## 🧪 로컬 개발 DB 모드 (2026-06-26)
@@ -123,6 +125,7 @@
 | `verify-env.mjs` | 배포 env 계약 검증(빌드 시 실행) | 커밋·push됨 |
 | `verify-stage2-claude.mjs` | 2차: 적합성·중복·이름 판정 + 애매 건 Claude(raw fetch) 호출 | 완성·실호출 검증·커밋·push |
 | `approve-and-save.mjs` | 3차: 승인 후 DB 저장(브랜드·위치·카테고리), 플래그 3단계·idempotent | 완성·첫 저장 검증·커밋·push |
+| `hide-uncategorized.mjs` | 카테고리 미연결 location 숨김(`status='draft'`), 드라이런/`--confirm`/`--restore`·백업·idempotent | 완성·263곳 적용·커밋 대기 |
 
 ### 관리자 작업대 (로컬 전용, 보기 단계)
 | 파일 | 역할 | 상태 |
@@ -164,6 +167,11 @@
    - **3차(승인 저장)**: 드라이런 "저장예정 48 / 건너뜀 1" 확인 후 `--approve all --confirm`로 저장. **나폴레옹과자점 롯데백화점 건대점 1곳**은 저장 직전 재조회에서 중복으로 건너뜀(2차는 통과했으나 approve-and-save의 좌표50m+이름/도로명 재조회에 걸림 — 멱등 안전장치 정상). **48곳 저장**(건너뜀 1·실패 0). `bakery_locations` **246 → 294행**(원격 라이브 카운트 확인). 이름매칭 카테고리 일부 자동연결, 나머지 미정. 프랜차이즈 표시만.
    - 신규율 하락 확인: 75곳 중 신규 48곳(64%) — 1~3R로 서울 주요 빵집 권역이 상당 부분 커버됨. 다음 라운드는 미커버 지역 위주가 효율적.
    - ⚠️ 자동수집분은 **미검증(D)·카테고리 다수 미정** — 작업대 정밀검증으로 추후 보완. DB 구조 변경 0, `quest_` 미사용, 좌표·주소 카카오값만.
+3. **카테고리 미연결 빵집 일괄 숨김 — `status='draft'`(공개 294 → 31).** 사용자 요청: 카테고리 0인 빵집은 비공개, 카테고리 ≥1만 노출.
+   - **DB 구조 확인(읽기 전용 먼저)**: `'hidden'`은 `location_status` enum에 **없음**(draft/active/temporary_closed/closed/relocated/verification_needed — hidden은 `menu_status` 전용). 공개 노출 기준은 status가 아니라 **RLS 정책 `status<>'draft' AND published_at IS NOT NULL`**(migration line 585~588). 공개 목록 쿼리(`lib/bakery-repository.ts:146` `loadBakeryDataSet`)는 **anon 공개 클라이언트**(`createSupabasePublicClient`)로 `select("*")`만 — 코드 status 필터 없음 → RLS가 노출 결정. 따라서 status를 active 외 값(verification_needed 등)으로 바꿔도 published_at 남으면 여전히 노출 → **비공개 단일 수단 = `status='draft'`**.
+   - **영향 실측**: 294곳 전부 공개 중(active 293+verification_needed 1) → 카테고리 ≥1 **31곳**(유지) / 카테고리 0 **263곳**(숨김, 약 89%). 사용자에게 영향 명시 후 방식 선택(AskUserQuestion) → **A: status='draft'**(단일 컬럼·published_at 보존·완전가역) 채택.
+   - **새 스크립트 `scripts/hide-uncategorized.mjs`**: 드라이런(기본, 쓰기 0) → `--confirm`(변경 직전 `output/hide-backup-<시각>.json` 백업 후 50개씩 배치 `status='draft'` UPDATE, 멱등) → `--restore <백업> --confirm`(status·published_at 원복). 자격증명 `.env.remote.local`만. quest_ 미사용. 카테고리 ≥1인 31곳은 미변경.
+   - **실행·검증**: 드라이런 263 확인 → `--confirm` → **263건 변경(실패 0)**, 백업 `output/hide-backup-2026-06-29T01-21-49-551Z.json`. 재카운트: status active30·verification_needed1·draft263, **공개(RLS) 31 전부 카테고리 보유·미연결 공개 0**. (카테고리 보유한 verification_needed 1곳은 규칙대로 미변경 → 공개 유지.) DB 구조 변경 0.
 
 ### 2026-06-27
 1. **대량수집 1라운드(6개 동네) 실행 — 사용자 승인 후 끝까지 자동 진행.**
