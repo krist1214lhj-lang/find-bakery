@@ -51,9 +51,11 @@ function getArg(flag) {
   return i >= 0 ? (process.argv[i + 1] ?? null) : null;
 }
 const PREFIX = getArg("--prefix") || "jeju";
+const REGION2 = getArg("--region2"); // 선택: 구/시 제약(예: 강남구) — 동명 도로명 false-positive 방지
 const AREAS = (getArg("--areas") || "").split(",").map((s) => s.trim()).filter(Boolean);
 const AREA_KEYS = AREAS.map((a) => a.replace(/(동|읍|면|리)$/, "")); // 어간(예: 연남동→연남)
 function matchArea(l) {
+  if (REGION2 && (l.region_level_2 || "") !== REGION2) return false; // 구/시 한정
   if (AREA_KEYS.length === 0) {
     return /제주/.test(l.region_level_1 || "") || /제주/.test(l.road_address || "");
   }
