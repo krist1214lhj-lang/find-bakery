@@ -51,18 +51,26 @@ function getArg(flag) {
   return i >= 0 ? (process.argv[i + 1] ?? null) : null;
 }
 const PREFIX = getArg("--prefix") || "jeju";
-const REGION2 = getArg("--region2"); // 선택: 구/시 제약(예: 강남구) — 동명 도로명 false-positive 방지
+const REGION2 = getArg("--region2"); // 선택: 단일 구/시 제약(예: 강남구) — 동명 도로명 false-positive 방지
+// 다구역 선택자: "시도:구,시도:구" (시도는 부분일치, 구는 정확일치). 예) "부산:해운대구,대구:중구"
+// → 별칭(서면·동성로·한옥마을)이 주소에 없을 때 구(region_level_2) 단위로 정확 선별. 중구 동명 구분 위해 시도 지정.
+const DISTRICTS = (getArg("--districts") || "").split(",").map((s) => s.trim()).filter(Boolean)
+  .map((s) => { const [a, b] = s.split(":"); return b ? { r1: a, r2: b } : { r1: null, r2: a }; });
 const AREAS = (getArg("--areas") || "").split(",").map((s) => s.trim()).filter(Boolean);
 const AREA_KEYS = AREAS.map((a) => a.replace(/(동|읍|면|리)$/, "")); // 어간(예: 연남동→연남)
 function matchArea(l) {
-  if (REGION2 && (l.region_level_2 || "") !== REGION2) return false; // 구/시 한정
+  if (REGION2 && (l.region_level_2 || "") !== REGION2) return false; // 단일 구/시 한정
+  if (DISTRICTS.length > 0) {
+    return DISTRICTS.some((d) =>
+      (!d.r1 || (l.region_level_1 || "").includes(d.r1)) && (l.region_level_2 || "") === d.r2);
+  }
   if (AREA_KEYS.length === 0) {
     return /제주/.test(l.region_level_1 || "") || /제주/.test(l.road_address || "");
   }
   const hay = `${l.region_level_3 || ""} ${l.road_address || ""}`;
   return AREA_KEYS.some((k) => hay.includes(k));
 }
-const AREA_LABEL = AREAS.length ? AREAS.join("·") : "제주";
+const AREA_LABEL = AREAS.length ? AREAS.join("·") : DISTRICTS.length ? DISTRICTS.map((d) => d.r2).join("·") : "제주";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ── 1단계: 제주 draft 목록 ────────────────────────────────────
