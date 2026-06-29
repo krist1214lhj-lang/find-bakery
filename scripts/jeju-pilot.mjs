@@ -43,7 +43,24 @@ async function fetchAllLocations(columns) {
   return rows;
 }
 
-const isJeju = (l) => /제주/.test(l.region_level_1 || "") || /제주/.test(l.road_address || "");
+// ── 지역 파라미터(재사용) ─────────────────────────────────────
+// --areas "연남동,성수동,..." 로 지역 지정, --prefix 로 출력 파일 접두어.
+// 미지정 시 기본 = 제주(하위호환), prefix=jeju.
+function getArg(flag) {
+  const i = process.argv.indexOf(flag);
+  return i >= 0 ? (process.argv[i + 1] ?? null) : null;
+}
+const PREFIX = getArg("--prefix") || "jeju";
+const AREAS = (getArg("--areas") || "").split(",").map((s) => s.trim()).filter(Boolean);
+const AREA_KEYS = AREAS.map((a) => a.replace(/(동|읍|면|리)$/, "")); // 어간(예: 연남동→연남)
+function matchArea(l) {
+  if (AREA_KEYS.length === 0) {
+    return /제주/.test(l.region_level_1 || "") || /제주/.test(l.road_address || "");
+  }
+  const hay = `${l.region_level_3 || ""} ${l.road_address || ""}`;
+  return AREA_KEYS.some((k) => hay.includes(k));
+}
+const AREA_LABEL = AREAS.length ? AREAS.join("·") : "제주";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ── 1단계: 제주 draft 목록 ────────────────────────────────────
@@ -51,24 +68,24 @@ async function runList() {
   const locs = await fetchAllLocations(
     "id,slug,name,status,road_address,region_level_1,region_level_2,region_level_3",
   );
-  const jejuDraft = locs
-    .filter((l) => isJeju(l) && l.status === "draft")
-    .sort((a, b) => (a.region_level_2 || "").localeCompare(b.region_level_2 || ""));
-  const jejuAll = locs.filter(isJeju);
-  console.log("\n=== 제주 빵집 현황 ===");
-  console.log(`제주 전체: ${jejuAll.length} | 공개(비draft): ${jejuAll.length - jejuDraft.length} | draft(숨김): ${jejuDraft.length}\n`);
-  jejuDraft.forEach((l, i) => {
+  const draft = locs
+    .filter((l) => matchArea(l) && l.status === "draft")
+    .sort((a, b) => (a.region_level_3 || a.region_level_2 || "").localeCompare(b.region_level_3 || b.region_level_2 || ""));
+  const all = locs.filter(matchArea);
+  console.log(`\n=== ${AREA_LABEL} 빵집 현황 ===`);
+  console.log(`대상 전체: ${all.length} | 공개(비draft): ${all.length - draft.length} | draft(숨김): ${draft.length}\n`);
+  draft.forEach((l, i) => {
     const region = [l.region_level_2, l.region_level_3].filter(Boolean).join(" ");
     console.log(`${String(i + 1).padStart(3)}. ${l.name}  [${region}]\n     ${l.road_address || "(주소 없음)"}  · ${l.slug}`);
   });
   mkdirSync(new URL("../output/", import.meta.url), { recursive: true });
-  const rows = jejuDraft.map((l) => ({
+  const rows = draft.map((l) => ({
     slug: l.slug, name: l.name, road_address: l.road_address,
     region_level_1: l.region_level_1, region_level_2: l.region_level_2, region_level_3: l.region_level_3,
   }));
-  writeFileSync(new URL("../output/jeju-draft.json", import.meta.url),
-    JSON.stringify({ generated_at: new Date().toISOString(), count: rows.length, rows }, null, 2), "utf8");
-  console.log(`\nJSON 저장: output/jeju-draft.json (${rows.length}곳)`);
+  writeFileSync(new URL(`../output/${PREFIX}-draft.json`, import.meta.url),
+    JSON.stringify({ generated_at: new Date().toISOString(), areas: AREAS, count: rows.length, rows }, null, 2), "utf8");
+  console.log(`\nJSON 저장: output/${PREFIX}-draft.json (${rows.length}곳)`);
 }
 
 // ── 4단계: 정밀검증 (lib/verification-research-core.ts 포팅) ───
@@ -247,12 +264,12 @@ async function researchBakeryGrade(input, apiKey) {
 async function runVerify() {
   const apiKey = loadAnthropicKey();
   if (!apiKey) { console.error("[jeju-pilot] ANTHROPIC_API_KEY 가 없습니다(.env.local 등)."); process.exit(1); }
-  const cand = JSON.parse(readFileSync(new URL("../output/jeju-candidates.json", import.meta.url), "utf8"));
+  const cand = JSON.parse(readFileSync(new URL(`../output/${PREFIX}-candidates.json`, import.meta.url), "utf8"));
   const slugs = cand.slugs || [];
   const locs = await fetchAllLocations("slug,name,road_address,region_level_1,region_level_2,status");
   const bySlug = new Map(locs.map((l) => [l.slug, l]));
 
-  console.log(`\n=== 제주 후보 정밀검증 (${slugs.length}곳, 모델 ${VERIFY_MODEL}, 검색 최대 ${MAX_SEARCHES}회/곳) ===\n`);
+  console.log(`\n=== ${AREA_LABEL} 후보 정밀검증 (${slugs.length}곳, 모델 ${VERIFY_MODEL}, 검색 최대 ${MAX_SEARCHES}회/곳) ===\n`);
   const results = [];
   let totalCost = 0;
   for (let i = 0; i < slugs.length; i++) {
@@ -277,11 +294,11 @@ async function runVerify() {
   }
 
   mkdirSync(new URL("../output/", import.meta.url), { recursive: true });
-  writeFileSync(new URL("../output/jeju-verify.json", import.meta.url),
+  writeFileSync(new URL(`../output/${PREFIX}-verify.json`, import.meta.url),
     JSON.stringify({ generated_at: new Date().toISOString(), model: VERIFY_MODEL, total_cost_krw: totalCost, results }, null, 2), "utf8");
 
   console.log(`\n총 실측 비용: 약 ${totalCost}원 / ${results.length}곳`);
-  console.log("JSON 저장: output/jeju-verify.json (저장 단계 입력용, DB 쓰기 없음)");
+  console.log(`JSON 저장: output/${PREFIX}-verify.json (저장 단계 입력용, DB 쓰기 없음)`);
 }
 
 // ── 5단계: 저장 (A·B + 카테고리 → status=active + 카테고리 + 등급기록) ──
@@ -289,7 +306,7 @@ const GRADE_REVIEW_DAYS = { A: 30, B: 90, C: 60, D: 30 };
 
 async function runSave() {
   const CONFIRM = process.argv.includes("--confirm");
-  const verify = JSON.parse(readFileSync(new URL("../output/jeju-verify.json", import.meta.url), "utf8"));
+  const verify = JSON.parse(readFileSync(new URL(`../output/${PREFIX}-verify.json`, import.meta.url), "utf8"));
   // 저장 대상: 등급 A/B + 카테고리 근거 있는 것만. (보류/C/null 제외)
   const targets = (verify.results || []).filter(
     (r) => (r.proposedGrade === "A" || r.proposedGrade === "B") && (r.categories?.length ?? 0) > 0,
@@ -319,7 +336,7 @@ async function runSave() {
   // 백업(변경 직전 status/published_at)
   mkdirSync(new URL("../output/", import.meta.url), { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const backupPath = `output/jeju-save-backup-${stamp}.json`;
+  const backupPath = `output/${PREFIX}-save-backup-${stamp}.json`;
   writeFileSync(new URL(`../${backupPath}`, import.meta.url),
     JSON.stringify({ generated_at: new Date().toISOString(),
       rows: plan.map((p) => ({ slug: p.loc.slug, name: p.loc.name, status: p.loc.status, published_at: p.loc.published_at })) }, null, 2), "utf8");

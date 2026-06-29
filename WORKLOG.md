@@ -35,6 +35,7 @@
 - **대량수집 10라운드 완료·승인 + 숨김 재적용(2026-06-29) — 5도시 75곳 저장, DB 1135행.** 원주·거제·양산·경산·아산 각 "빵집" 15곳=75 → 2차 **승인후보 75 / 보류 0 / 제외 0**(배치내·DB 중복 0). **Claude 0건 = 0원**. `--approve all --confirm`로 **75곳 저장**(건너뜀0·실패0), `bakery_locations` **1060→1135행**(경남 +30·경북 +15·강원 +15·충남 +15). 곧바로 `hide-uncategorized.mjs --confirm` → 신규 미분류 **69곳 draft**(백업 `hide-backup-2026-06-29T02-44-28-705Z.json`). **최종: 1135행 = 공개 97(=91+10R 이름매칭 6) / draft 1038 / verification_needed 1, 미분류 공개 0. 지역 17개 시·도 유지(확장): 서울 482·경기 125·경남 90·경북 75·전남 47·부산 46·강원 45·전북 44·충남 30·대구 30·제주 30·대전 16·울산 15·인천 15·세종 15·충북 15·광주 15.**
 - **대량수집 11라운드(제주 추가) 완료·승인 + 숨김 재적용(2026-06-29) — 제주 관광지 5동네 74곳 → 66곳 저장, DB 1201행.** 제주 애월·협재·성산, 서귀포 중문·대정 각 "빵집" 15곳(성산 14)=74 → 2차 **승인후보 66 / 보류 0 / 제외 8**(R7 제주/서귀포 기수집분과 약 0m 중복). **Claude 0건 = 0원**. `--approve all --confirm`로 **66곳 저장**(건너뜀0·실패0), `bakery_locations` **1135→1201행**(제주 30→96). 곧바로 `hide-uncategorized.mjs --confirm` → 신규 미분류 **65곳 draft**(백업 `hide-backup-2026-06-29T02-53-50-906Z.json`). **최종: 1201행 = 공개 98(=97+11R 이름매칭 1) / draft 1103 / verification_needed 1, 미분류 공개 0. 제주 96곳으로 강화.**
 - **제주 빵집 검증 파일럿 완료(2026-06-29) — 숨김분 중 유명 빵집만 검증해 공개 전환.** 5단계: ① 제주 draft 94곳 추출(읽기) ② 무료 WebSearch "제주 유명 빵집" 명단 ③ 대조 후보 11곳 ④ 유료 정밀검증(`verification-research` 로직 포팅 = Haiku 4.5+웹검색 2회, **11곳 788원**) ⑤ 보고 후 승인 저장. 판정 **A 7·B 3·보류 1**(보룡제과 null). **A·B 10곳을 `draft→active` + 카테고리(`location_bread_categories`) + 등급기록(`sources`+`verification_records`, field=business_hours, A→official·B→secondary, 검토주기 A30·B90일)으로 공개 전환.** 제주 공개 2→12, 전체 공개 98→108, draft 1103→1093. 새 스크립트 `scripts/jeju-pilot.mjs`(list/`--verify`/`--save`, 백업 `output/jeju-save-backup-*.json`). 검증: 아베베 A/official·도도 B/secondary 기록 확인, 미분류 공개 0 유지. **→ 숨김 1093곳 재노출의 표준 워크플로(무료 명단 → 후보만 유료검증 → A·B 공개) 확립, 타 지역 확장 가능.**
+- **서울 핫플 검증(2026-06-29) — 같은 워크플로 확장, A·B 12곳 공개.** `jeju-pilot.mjs`를 **지역 파라미터화**(`--areas "연남동,성수동,한남동,망원동" --prefix seoul-hot`; `--areas` 미지정 시 제주 기본값 유지 = 하위호환). 동네별 매칭은 `region_level_3` 어간(연남/성수/한남/망원) 포함으로 필터. draft 64곳 → 무료 WebSearch 명단(동네별) → 후보 12곳 → 정밀검증 **809원**(A 8·B 4·보류 0) → 12곳 `draft→active`+카테고리+등급기록 공개. 전체 공개 108→120, 서울 핫플 1→13, draft 1093→1081, 미분류 공개 0 유지. 백업 `output/seoul-hot-save-backup-*.json`. (검증모드 콘솔 라벨은 `--areas` 미전달 시 "제주"로 표기되나 cosmetic — 파일 prefix·로직은 정상.)
 
 ### 커밋 현황
 | 커밋 | 내용 | 원격 push |
@@ -72,14 +73,15 @@
 | `0d6f7f6` | 대량수집 9라운드(세종+중소 10동네 136곳, DB 1060행·17개시도완성) + 숨김(128) + 일지 | ✅ (codex) |
 | `27c7795` | 대량수집 10라운드(5도시 75곳, DB 1135행) + 숨김 재적용(69) + 일지 | ✅ (codex) |
 | `7d0dbf3` | 대량수집 11라운드(제주 5동네 66곳, DB 1201행) + 숨김 재적용(65) + 일지 | ✅ (codex) |
-| (이번) | 제주 검증 파일럿(`jeju-pilot.mjs`) + A·B 10곳 공개전환(공개 108) + 일지 | ❌ (로컬, push 예정) |
+| `3972125` | 제주 검증 파일럿(`jeju-pilot.mjs`) + A·B 10곳 공개전환(공개 108) + 일지 | ✅ (codex) |
+| (이번) | `jeju-pilot.mjs` 지역 파라미터화 + 서울 핫플 A·B 12곳 공개(공개 120) + 일지 | ❌ (로컬, push 예정) |
 
 ---
 
 ## 🔄 진행 중
 
 - **자동화 5단계 + 관리자 작업대(지도 포함) 전부 완성·커밋·push 완료.**
-- **대량수집 1~11라운드 완료 + 제주 검증 파일럿 — `bakery_locations` 1201행, 공개 108 / draft 1093 / verification_needed 1.** 전국 17개 시·도(서울 482·경기 125·제주 96·경남 90·경북 75·전남 47·부산 46·강원 45·전북 44·충남 30·대구 30·대전 16·울산 15·인천 15·세종 15·충북 15·광주 15). **카테고리 미연결분은 `draft` 숨김** — 공개 108곳은 전부 카테고리 보유(이름매칭 + 제주 파일럿 검증 10곳). **재노출 표준 워크플로 확립**(제주 파일럿: 무료 명단 → 후보만 유료검증 → A·B 공개, `scripts/jeju-pilot.mjs`). ⚠️ 수집 라운드마다 저장(active) 직후 `hide-uncategorized.mjs --confirm`로 미분류 숨김 재적용 필요.
+- **대량수집 1~11라운드 완료 + 제주 검증 파일럿 — `bakery_locations` 1201행, 공개 108 / draft 1093 / verification_needed 1.** 전국 17개 시·도(서울 482·경기 125·제주 96·경남 90·경북 75·전남 47·부산 46·강원 45·전북 44·충남 30·대구 30·대전 16·울산 15·인천 15·세종 15·충북 15·광주 15). **카테고리 미연결분은 `draft` 숨김** — 공개 108곳은 전부 카테고리 보유(이름매칭 + 제주 파일럿 검증 10곳). **재노출 표준 워크플로 확립·확장**(제주 10곳 + 서울 핫플 12곳 공개; `scripts/jeju-pilot.mjs --areas/--prefix`로 타 지역 반복). ⚠️ 수집 라운드마다 저장(active) 직후 `hide-uncategorized.mjs --confirm`로 미분류 숨김 재적용 필요.
 - 미커밋: `next-env.d.ts`(자동 생성, 커밋 제외).
 
 ## 🧪 로컬 개발 DB 모드 (2026-06-26)
@@ -142,7 +144,7 @@
 | `verify-stage2-claude.mjs` | 2차: 적합성·중복·이름 판정 + 애매 건 Claude(raw fetch) 호출 | 완성·실호출 검증·커밋·push |
 | `approve-and-save.mjs` | 3차: 승인 후 DB 저장(브랜드·위치·카테고리), 플래그 3단계·idempotent | 완성·첫 저장 검증·커밋·push |
 | `hide-uncategorized.mjs` | 카테고리 미연결 location 숨김(`status='draft'`), 드라이런/`--confirm`/`--restore`·백업·idempotent | 완성·적용·push됨 |
-| `jeju-pilot.mjs` | 지역 검증 파일럿(목록/`--verify`=유료 정밀검증/`--save`=A·B 공개전환). `verification-research` 로직 포팅 | 완성·제주 10곳 공개·커밋 대기 |
+| `jeju-pilot.mjs` | 지역 검증 파일럿(목록/`--verify`/`--save`), **지역 파라미터화**(`--areas`/`--prefix`, 미지정=제주). `verification-research` 로직 포팅 | 완성·제주 10+서울 12곳 공개·커밋 대기 |
 
 ### 관리자 작업대 (로컬 전용, 보기 단계)
 | 파일 | 역할 | 상태 |
@@ -243,6 +245,14 @@
    - **4단계(유료)**: `jeju-pilot.mjs --verify` — 후보 11곳을 `verification-research` 로직 포팅(Haiku 4.5 + 웹검색 ≤2회)으로 등급+카테고리 동시 판정. 주소 대조로 동명 다른 가게 방지, 근거 없으면 보류. 결과 **A 7·B 3·보류 1**(보룡제과 null), **실측 788원**(`output/jeju-verify.json`).
    - **5단계(승인 후 저장)**: `jeju-pilot.mjs --save --confirm` — A·B **10곳**을 `draft→active`(published_at 보존→즉시 공개) + 카테고리(`location_bread_categories`) + 등급기록(`sources`+`verification_records`, field=business_hours, normalized_value.autoGrade, A→source_authority=official·B→secondary, 검토주기 A30·B90일). 멱등(등급 기록 있으면 skip)·백업(`output/jeju-save-backup-*.json`). 보룡제과 보류 유지.
    - **결과·검증**: 제주 공개 2→12, 전체 공개 98→108, draft 1103→1093, 미분류 공개 0 유지. 아베베 A/official·도도 B/secondary 기록 확인. DB 구조 변경 0, `quest_` 미사용, 좌표·주소 불변. **→ 숨김 1093곳 재노출의 표준 워크플로 확립(타 지역 동일 적용 가능).**
+12. **서울 핫플 검증(연남·성수·한남·망원) — 제주와 동일 워크플로, A·B 12곳 공개.**
+   - `jeju-pilot.mjs` **지역 파라미터화**: `--areas "연남동,성수동,한남동,망원동" --prefix seoul-hot`. 매칭=`region_level_3` 어간(연남/성수/한남/망원) 포함. `--areas` 미지정 시 제주 기본값(하위호환).
+   - **1단계**: draft **64곳** 추출(연남 15·성수 19·한남 15·망원 15).
+   - **2단계(무료)**: 동네별 WebSearch로 유명 빵집 명단(여러 출처 종합).
+   - **3단계**: 대조 → **후보 12곳**(프랜차이즈·호텔·미언급·우리 DB 미존재 제외).
+   - **4단계(유료)**: `--verify --prefix seoul-hot` → **A 8·B 4·보류 0**, 실측 **809원**(`output/seoul-hot-verify.json`).
+   - **5단계(승인 후 저장)**: 드라이런 12 확인 → `--save --confirm --prefix seoul-hot` → 12곳 `draft→active`+카테고리+등급기록. 백업 `output/seoul-hot-save-backup-*.json`.
+   - **결과**: 전체 공개 108→**120**, 서울 핫플 1→13, draft 1093→1081, 미분류 공개 0 유지. 실패 0. **워크플로 재사용성 입증(타 지역 `--areas`/`--prefix`만 변경).**
 
 ### 2026-06-27
 1. **대량수집 1라운드(6개 동네) 실행 — 사용자 승인 후 끝까지 자동 진행.**
