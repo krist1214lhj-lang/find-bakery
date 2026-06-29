@@ -8,7 +8,8 @@
 ## 📌 현재 상태 (2026-06-29 기준)
 
 - **브랜치:** `codex/map-list-sync`
-- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨(중복 수정은 PR #3, 탐색 단일 핀 포커스는 PR #4로 main 반영 완료).
+- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨(PR #3 중복 수정, PR #4 탐색 단일 핀, **PR #5 모바일 반응형(`867c512`, 2026-06-29) 머지·배포 완료**).
+- **모바일 반응형 개선(2026-06-29) → PR #5 배포:** ① 홈 가로 스크롤 제거(`.sr-only` absolute가 캐러셀 overflow 벗어남 → `html,body{overflow-x:hidden}`+`.bakery-card{position:relative}`, 375px 스크롤 518→0). ② explore 목록 모바일 가상화(134개 전부→초기 20개+"더 보기", matchMedia 760px·데스크톱/지도핀 무영향, 66,918→10,892px). 헤드리스(gstack browse 375px) 진단·전후 검증. 상세·explore 지도뷰는 원래 정상. codex 커밋 `6a0662a`·`7f38c8e`, main은 PR #5(squash `867c512`).
 - **배포 연결 문제 해결됨:** 케이크·식사빵 등 카테고리 정상 노출 확인
 - **뺑드미 아차산점**: DB에 추가 완료 + 좌표를 카카오 검증값으로 교정 완료
 - **자동화 1단계(카카오 1차 검증)**: 스크립트 완성·커밋·push
@@ -78,7 +79,11 @@
 | `3972125` | 제주 검증 파일럿(`jeju-pilot.mjs`) + A·B 10곳 공개전환(공개 108) + 일지 | ✅ (codex) |
 | `0cc0ae0` | `jeju-pilot.mjs` 지역 파라미터화 + 서울 핫플 A·B 12곳 공개(공개 120) + 일지 | ✅ (codex) |
 | `0e556d5` | `jeju-pilot.mjs` `--region2` 추가 + 강남 A·B 8곳 공개(공개 128) + 일지 | ✅ (codex) |
-| (이번) | `jeju-pilot.mjs` `--districts` 추가 + 부산·대구·전주 A 6곳 공개(공개 134) + 일지 | ❌ (로컬, push 예정) |
+| `f613696` | `jeju-pilot.mjs` `--districts` 추가 + 부산·대구·전주 A 6곳 공개(공개 134) + 일지 | ✅ (codex) |
+| `6a0662a` | 모바일 홈 가로 스크롤 수정(`html,body overflow-x:hidden` + `.bakery-card position:relative`) | ✅ (codex) |
+| `7f38c8e` | 모바일 explore 목록 가상화(초기 20 + 더 보기) | ✅ (codex) |
+| `867c512` | **PR #5 squash → `main` 배포** (모바일 반응형 2파일) | ✅ `main` |
+| (이번) | 모바일 개선 HANDOFF/WORKLOG 반영 | ❌ (로컬, push 예정) |
 
 ---
 
@@ -271,6 +276,12 @@
    - **4단계(유료)**: `--verify --prefix busan-daegu-jeonju` → **A 6·보류 1(퍼프베이커리)**, 실측 **524원**.
    - **5단계(저장)**: `--save --confirm` → A 6곳 공개(옵스 해운대·마린시티·롯데부산 / 비엔씨 해운대 / 대구근대골목단팥빵 / PNB풍년제과 한옥마을점). 전부 A→source_authority=official.
    - **결과**: 전체 공개 128→**134**, draft 1073→1067, 미분류 공개 0. 실패 0. 백업 `output/busan-daegu-jeonju-save-backup-*.json`. **검증 공개 누계 36곳(제주10+서울12+강남8+부산대구전주6).**
+15. **모바일 반응형 진단·수정 → PR #5 배포 (검증 작업 일시중단).** 사용자가 "모바일에서 화면 깨짐" 보고 → 헤드리스(gstack browse)로 375~430px 진단.
+   - **진단**: viewport 메타 정상. 상세·explore 지도뷰는 모바일 정상. **홈=가로 스크롤(문서폭 938)**, **explore 목록=세로 66,918px(134개 전부 렌더)** 두 곳이 문제. (minor: 홈 검색 input 13px iOS 줌, 탭타깃<44px.)
+   - **문제1 홈 가로스크롤 원인**: 저장버튼 `.sr-only`(`position:absolute`)가 positioned 조상 없어 홈 "최근 확인된 빵집" 가로 캐러셀의 `overflow` 클리핑을 벗어나 `left:937`에 박힘 → 문서폭 938(body는 390). **수정**: `html,body{overflow-x:hidden}`+`.bakery-card{position:relative}`. 검증 375px: 가로 스크롤 518→0, overflowX true→false. 캐러셀 스와이프·데스크톱 sticky 유지. (커밋 `6a0662a`)
+   - **문제2 explore 목록**: 모바일 `@media`에서 목록 패널 `max-height:none`로 134개 전부 쌓임. **수정**: `MOBILE_PAGE_SIZE=20`, `matchMedia(760px)`로 모바일에서만 `visibleItems.slice(0,listLimit)` 렌더 + `.load-more`("더 보기")로 +20, 결과 바뀌면 리셋. 지도 핀(`mapItems`)·데스크톱 전체렌더는 유지. 검증 375px: 66,918→10,892px, 카드 134→20, 더보기·필터리셋·데스크톱 무영향. typecheck 통과. (커밋 `7f38c8e`)
+   - **배포**: 두 수정(2파일)을 main 기준 새 브랜치 `feat/mobile-responsive-fixes`에 얹어 **PR #5 → squash `867c512` main 머지·production 배포**(PR #3/#4와 동일 패턴). 작업대·스크립트 등 codex 전용 변경 미포함.
+   - 진행하던 광주·대전·수원·인천 검증(후보 5곳, `output/gwangju-daejeon-suwon-incheon-candidates.json`)은 보존 — 4단계(유료)부터 재개 가능.
 
 ### 2026-06-27
 1. **대량수집 1라운드(6개 동네) 실행 — 사용자 승인 후 끝까지 자동 진행.**
