@@ -49,6 +49,13 @@ export type MenuItem = {
   checkedAt?: string;
 };
 
+export type SignatureItem = {
+  slug: string;
+  name: string;
+  emoji: string;
+  evidence: string;
+};
+
 export type SpecialSchedule = {
   id: string;
   date: string;
@@ -85,6 +92,7 @@ export type Bakery = {
   fameSource: string;
   verification: VerificationSummary;
   menus: MenuItem[];
+  signatures: SignatureItem[];
 };
 
 export type BreadCategory = {

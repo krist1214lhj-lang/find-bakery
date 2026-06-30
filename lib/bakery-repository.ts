@@ -3,6 +3,7 @@ import { createSupabasePublicClient } from "@/lib/supabase/server";
 import { formatRegionLabel, matchesRegionFilter } from "@/lib/region";
 import { getCategoryImage } from "@/lib/category-image";
 import { extractRationale, resolveFame } from "@/lib/fame";
+import { extractSignatureCategories } from "@/lib/signature";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
   Bakery,
@@ -240,6 +241,18 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     ? sourceById.get(fame.source_id)
     : undefined;
   const presentation = getPresentation(categories.map((item) => item.slug));
+  // "꼭 먹어볼 빵"(SIGNATURE): 실제 menu_items 없을 때 정밀검증 카테고리 근거로 채운다.
+  const categoryNameBySlug = new Map(
+    data.categories.map((category) => [category.slug, category.name]),
+  );
+  const signatures = extractSignatureCategories(
+    verification?.normalized_value,
+  ).map((item) => ({
+    slug: item.slug,
+    name: categoryNameBySlug.get(item.slug) ?? item.slug,
+    emoji: getCategoryEmoji(item.slug),
+    evidence: item.evidence,
+  }));
   // "이곳이 알려진 이유" 카드: fame_evidence 우선, 없으면 정밀검증 rationale로 채운다.
   const fameResolved = resolveFame({
     fameDescription: fame?.description,
@@ -303,6 +316,7 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     menus: data.menus
       .filter((menu) => menu.location_id === location.id)
       .map(mapMenu),
+    signatures,
   };
 }
 

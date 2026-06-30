@@ -118,24 +118,45 @@ export default async function BakeryDetailPage({
               <h2>꼭 먹어볼 빵</h2>
             </div>
           </div>
-          <div className="menu-grid">
-            {bakery.menus.map((menu) => (
-              <div className="menu-card" key={menu.id}>
-                <span aria-hidden="true">{menu.emoji}</span>
-                <h3>{menu.name}</h3>
-                <strong>
-                  {menu.price === undefined
-                    ? "가격 확인 중"
-                    : `${menu.price.toLocaleString("ko-KR")}원`}
-                </strong>
-                <small>
-                  {menu.checkedAt
-                    ? `${formatCheckedDate(menu.checkedAt)} 가격 확인`
-                    : "가격 확인일 준비 중"}
-                </small>
-              </div>
-            ))}
-          </div>
+          {bakery.menus.length > 0 ? (
+            <div className="menu-grid">
+              {bakery.menus.map((menu) => (
+                <div className="menu-card" key={menu.id}>
+                  <span aria-hidden="true">{menu.emoji}</span>
+                  <h3>{menu.name}</h3>
+                  <strong>
+                    {menu.price === undefined
+                      ? "가격 확인 중"
+                      : `${menu.price.toLocaleString("ko-KR")}원`}
+                  </strong>
+                  <small>
+                    {menu.checkedAt
+                      ? `${formatCheckedDate(menu.checkedAt)} 가격 확인`
+                      : "가격 확인일 준비 중"}
+                  </small>
+                </div>
+              ))}
+            </div>
+          ) : bakery.signatures.length > 0 ? (
+            <div className="menu-grid">
+              {bakery.signatures.map((signature) => (
+                <div className="menu-card" key={signature.slug}>
+                  <span aria-hidden="true">{signature.emoji}</span>
+                  <h3>{signature.name}</h3>
+                  <small className="signature-evidence">
+                    {signature.evidence}
+                  </small>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="menu-empty">
+              <p>아직 정리된 대표 메뉴 정보가 없어요.</p>
+              {bakery.categories.length > 0 ? (
+                <small>대표 빵 종류: {bakery.categories.join(" · ")}</small>
+              ) : null}
+            </div>
+          )}
         </section>
 
         <section className="detail-section info-grid">

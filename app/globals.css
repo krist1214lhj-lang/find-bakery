@@ -1066,6 +1066,30 @@ a {
   color: var(--cocoa-600);
 }
 
+.signature-evidence {
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.menu-empty {
+  background: var(--flour-0);
+  border: 1px dashed var(--flour-200);
+  border-radius: 18px;
+  color: var(--cocoa-600);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px;
+}
+
+.menu-empty p {
+  margin: 0;
+}
+
+.menu-empty small {
+  color: var(--cocoa-600);
+}
+
 .info-grid {
   display: grid;
   gap: 60px;
