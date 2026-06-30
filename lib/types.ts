@@ -56,6 +56,12 @@ export type SignatureItem = {
   evidence: string;
 };
 
+export type FameSource = {
+  url: string;
+  label: string;
+  official: boolean;
+};
+
 export type SpecialSchedule = {
   id: string;
   date: string;
@@ -93,6 +99,7 @@ export type Bakery = {
   verification: VerificationSummary;
   menus: MenuItem[];
   signatures: SignatureItem[];
+  fameSources: FameSource[];
 };
 
 export type BreadCategory = {

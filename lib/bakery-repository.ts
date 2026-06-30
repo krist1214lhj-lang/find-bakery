@@ -3,6 +3,7 @@ import { createSupabasePublicClient } from "@/lib/supabase/server";
 import { formatRegionLabel, matchesRegionFilter } from "@/lib/region";
 import { getCategoryImage } from "@/lib/category-image";
 import { extractRationale, resolveFame } from "@/lib/fame";
+import { extractFameSources } from "@/lib/fame-sources";
 import { extractSignatureCategories } from "@/lib/signature";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
@@ -262,6 +263,8 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     verificationSourceLabel:
       verificationSource?.publisher ?? verificationSource?.url ?? null,
   });
+  // 출처 칩: 정밀검증이 인용한 매체(normalized_value.sources)를 도메인 기반 칩으로.
+  const fameSources = extractFameSources(verification?.normalized_value);
 
   return {
     id: location.id,
@@ -317,6 +320,7 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
       .filter((menu) => menu.location_id === location.id)
       .map(mapMenu),
     signatures,
+    fameSources,
   };
 }
 
