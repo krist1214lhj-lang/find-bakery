@@ -64,6 +64,7 @@ export const bakeries: Bakery[] = [
         checkedAt: "2026-06-10T10:00:00+09:00",
       },
     ],
+    signatures: [],
   },
   {
     id: "20000000-0000-4000-8000-000000000002",
@@ -126,6 +127,7 @@ export const bakeries: Bakery[] = [
         checkedAt: "2026-05-20T10:00:00+09:00",
       },
     ],
+    signatures: [],
   },
   {
     id: "20000000-0000-4000-8000-000000000003",
@@ -175,6 +177,7 @@ export const bakeries: Bakery[] = [
         checkedAt: "2026-02-12T12:00:00+09:00",
       },
     ],
+    signatures: [],
   },
 ];
 
