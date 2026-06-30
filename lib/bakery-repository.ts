@@ -2,6 +2,7 @@ import { cache } from "react";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
 import { formatRegionLabel, matchesRegionFilter } from "@/lib/region";
 import { getCategoryImage } from "@/lib/category-image";
+import { extractRationale, resolveFame } from "@/lib/fame";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
   Bakery,
@@ -39,6 +40,7 @@ type VerificationRow = Pick<
   | "result"
   | "verified_at"
   | "next_review_at"
+  | "normalized_value"
 >;
 type ScheduleRow = Tables["special_schedules"]["Row"];
 type FameRow = Tables["fame_evidence"]["Row"];
@@ -157,7 +159,7 @@ const loadBakeryDataSet = cache(async (): Promise<BakeryDataSet> => {
     client
       .from("verification_records")
       .select(
-        "id,location_id,menu_item_id,field,source_id,grade,result,verified_at,next_review_at",
+        "id,location_id,menu_item_id,field,source_id,grade,result,verified_at,next_review_at,normalized_value",
       )
       .order("verified_at", { ascending: false }),
     client.from("special_schedules").select("*").eq("status", "confirmed"),
@@ -238,6 +240,15 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     ? sourceById.get(fame.source_id)
     : undefined;
   const presentation = getPresentation(categories.map((item) => item.slug));
+  // "이곳이 알려진 이유" 카드: fame_evidence 우선, 없으면 정밀검증 rationale로 채운다.
+  const fameResolved = resolveFame({
+    fameDescription: fame?.description,
+    fameTitle: fame?.title,
+    fameSourceLabel: fameSource?.publisher ?? fameSource?.url ?? null,
+    verificationRationale: extractRationale(verification?.normalized_value),
+    verificationSourceLabel:
+      verificationSource?.publisher ?? verificationSource?.url ?? null,
+  });
 
   return {
     id: location.id,
@@ -266,12 +277,8 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
       .map((schedule) => mapSchedule(schedule, sourceById)),
     scheduleNote: getScheduleNote(location.status),
     facilities: mapFacilities(location),
-    fameReason:
-      fame?.description ??
-      fame?.title ??
-      "이 빵집이 알려진 이유를 확인하고 있어요.",
-    fameSource:
-      fameSource?.publisher ?? fameSource?.url ?? "검증된 출처 준비 중",
+    fameReason: fameResolved.reason,
+    fameSource: fameResolved.source,
     verification: {
       grade: effectiveGrade as VerificationGrade,
       checkedAt:
