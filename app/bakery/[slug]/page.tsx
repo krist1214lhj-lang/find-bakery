@@ -39,13 +39,11 @@ export default async function BakeryDetailPage({
 
   return (
     <article className="detail-page">
-      <div
-        className={`detail-hero tone-${bakery.imageTone}`}
-        role="img"
-        aria-label={`${bakery.name} 대표 이미지 자리`}
-      >
-        <span>{bakery.heroEmoji}</span>
-        <div className="detail-hero-label">대표 이미지 준비 중</div>
+      <div className={`detail-hero tone-${bakery.imageTone}`}>
+        {/* 정적 카테고리 예시 이미지 — 이미지 최적화기 비용 회피 위해 일반 img 사용 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="detail-hero-photo" src={bakery.categoryImage} alt="" />
+        <div className="detail-hero-label">예시 이미지</div>
       </div>
 
       <div className="detail-content">

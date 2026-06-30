@@ -317,6 +317,17 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.bakery-photo,
+.detail-hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .bakery-image > span {
@@ -326,12 +337,15 @@ a {
 
 .bakery-image small,
 .detail-hero-label {
-  background: rgb(255 255 255 / 65%);
+  background: rgb(255 255 255 / 82%);
   border-radius: 999px;
+  bottom: 10px;
   color: var(--cocoa-600);
   font-size: 11px;
-  margin-top: 12px;
   padding: 5px 9px;
+  position: absolute;
+  right: 10px;
+  z-index: 1;
 }
 
 .tone-gold {
@@ -907,6 +921,8 @@ a {
   height: min(52vw, 560px);
   justify-content: center;
   min-height: 360px;
+  position: relative;
+  overflow: hidden;
 }
 
 .detail-hero > span {

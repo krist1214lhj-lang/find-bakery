@@ -18,8 +18,15 @@ export function BakeryCard({ bakery }: BakeryCardProps) {
         href={`/bakery/${bakery.slug}`}
         aria-label={`${bakery.name} 상세 보기`}
       >
-        <span aria-hidden="true">{bakery.heroEmoji}</span>
-        <small>사진 준비 중</small>
+        {/* 정적 카테고리 예시 이미지(7장 고정, 이미 최적 크기) — 이미지 최적화기 비용 회피 위해 일반 img 사용 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="bakery-photo"
+          src={bakery.categoryImage}
+          alt=""
+          loading="lazy"
+        />
+        <small>예시 이미지</small>
       </Link>
       <div className="bakery-card-content">
         <div className="card-title-row">
