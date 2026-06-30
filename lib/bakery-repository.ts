@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
+import { formatRegionLabel, matchesRegionFilter } from "@/lib/region";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
   Bakery,
@@ -120,7 +121,7 @@ export function filterBakeries(bakeries: Bakery[], input: BakerySearchInput) {
     const matchesCategory =
       !input.category || bakery.categorySlugs.includes(input.category);
     const matchesRegion =
-      !input.region || bakery.region.startsWith(input.region);
+      !input.region || matchesRegionFilter(bakery.region, input.region);
 
     return matchesKeyword && matchesCategory && matchesRegion;
   });
@@ -242,9 +243,11 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     slug: location.slug,
     name: location.name,
     searchAliases: location.search_aliases,
-    region: [location.region_level_1, location.region_level_2]
-      .filter(Boolean)
-      .join(" "),
+    region: formatRegionLabel(
+      location.region_level_1,
+      location.region_level_2,
+      location.region_level_3,
+    ),
     roadAddress: location.road_address,
     latitude: location.latitude,
     longitude: location.longitude,
