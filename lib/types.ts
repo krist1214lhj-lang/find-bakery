@@ -74,6 +74,7 @@ export type Bakery = {
   categorySlugs: string[];
   imageTone: ImageTone;
   heroEmoji: string;
+  categoryImage: string;
   todayHours: string;
   opensAt: string;
   closesAt: string;

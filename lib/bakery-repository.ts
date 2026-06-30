@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
 import { formatRegionLabel, matchesRegionFilter } from "@/lib/region";
+import { getCategoryImage } from "@/lib/category-image";
 import type { Database } from "@/lib/supabase/database.types";
 import type {
   Bakery,
@@ -256,6 +257,7 @@ function mapBakery(location: LocationRow, data: BakeryDataSet): Bakery {
     categorySlugs: categories.map((category) => category.slug),
     imageTone: presentation.imageTone,
     heroEmoji: presentation.heroEmoji,
+    categoryImage: presentation.categoryImage,
     todayHours: hours.label,
     opensAt: hours.opensAt,
     closesAt: hours.closesAt,
@@ -405,15 +407,21 @@ function mapFacility(
 function getPresentation(categorySlugs: string[]): {
   imageTone: ImageTone;
   heroEmoji: string;
+  categoryImage: string;
 } {
   const primary = categorySlugs[0];
+  const categoryImage = getCategoryImage(primary);
   if (primary === "bagel") {
-    return { imageTone: "sage", heroEmoji: "🥯" };
+    return { imageTone: "sage", heroEmoji: "🥯", categoryImage };
   }
   if (primary === "meal-bread") {
-    return { imageTone: "berry", heroEmoji: "🍞" };
+    return { imageTone: "berry", heroEmoji: "🍞", categoryImage };
   }
-  return { imageTone: "gold", heroEmoji: getCategoryEmoji(primary) };
+  return {
+    imageTone: "gold",
+    heroEmoji: getCategoryEmoji(primary),
+    categoryImage,
+  };
 }
 
 function getCategoryEmoji(slug?: string) {
