@@ -1131,6 +1131,57 @@ a {
   color: var(--cocoa-600);
 }
 
+.fame-sources {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.fame-sources-label {
+  color: var(--cocoa-600);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.source-chip {
+  align-items: center;
+  background: var(--flour-0);
+  border: 1px solid var(--flour-200);
+  border-radius: 999px;
+  color: var(--cocoa-900);
+  display: inline-flex;
+  font-size: 13px;
+  gap: 5px;
+  padding: 6px 12px;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.source-chip:hover {
+  background: var(--flour-100);
+  border-color: var(--crust-600);
+}
+
+.source-chip.is-official {
+  border-color: var(--crust-600);
+}
+
+.source-badge {
+  background: var(--crust-600);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+}
+
+.fame-sources-more {
+  color: var(--cocoa-600);
+  font-size: 12px;
+}
+
 .correction-panel {
   align-items: center;
   border-top: 1px solid var(--flour-200);

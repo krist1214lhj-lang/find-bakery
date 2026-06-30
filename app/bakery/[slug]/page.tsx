@@ -185,7 +185,35 @@ export default async function BakeryDetailPage({
           <span className="eyebrow">WHY FAMOUS</span>
           <h2>이곳이 알려진 이유</h2>
           <p>{bakery.fameReason}</p>
-          <small>편집 근거: {bakery.fameSource}</small>
+          {bakery.fameSources.length > 0 ? (
+            <div className="fame-sources">
+              <span className="fame-sources-label">출처</span>
+              {bakery.fameSources.slice(0, 4).map((source) => (
+                <a
+                  className={
+                    source.official ? "source-chip is-official" : "source-chip"
+                  }
+                  href={source.url}
+                  key={source.url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {source.official ? (
+                    <span className="source-badge">공식</span>
+                  ) : null}
+                  {source.label}
+                  <span aria-hidden="true"> ↗</span>
+                </a>
+              ))}
+              {bakery.fameSources.length > 4 ? (
+                <span className="fame-sources-more">
+                  외 {bakery.fameSources.length - 4}곳
+                </span>
+              ) : null}
+            </div>
+          ) : (
+            <small>편집 근거: {bakery.fameSource}</small>
+          )}
         </section>
 
         <section className="correction-panel">
