@@ -5,10 +5,11 @@
 
 ---
 
-## 📌 현재 상태 (2026-06-29 기준)
+## 📌 현재 상태 (2026-06-30 기준)
 
-- **브랜치:** `codex/map-list-sync`
-- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨(PR #3 중복 수정, PR #4 탐색 단일 핀, **PR #5 모바일 반응형(`867c512`, 2026-06-29) 머지·배포 완료**).
+- **브랜치:** `codex/map-list-sync` (origin과 동기화, **미push 0**)
+- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨. main 반영 목록: PR #3 중복 수정 · PR #4 탐색 단일 핀 · PR #5 모바일 반응형(`867c512`, 2026-06-29) · **PR #6 지역버그(`29f2030`) · PR #7 카테고리 예시 이미지(`34ffd23`) · PR #8 fame rationale(`4ce8431`) · PR #9 SIGNATURE(`8ddf010`) · PR #10 출처 칩(`add60a9`) — 전부 2026-06-30 머지·배포 완료**.
+- **DB 현황(2026-06-30 원격 직접 조회):** `bakery_locations` **1201행 = 공개 158**(`active` 157 + `verification_needed` 1) **/ draft 1043**. 공개 158 = 이름매칭 카테고리 98 + **정밀검증 재공개 60**. 정밀검증 등급기록 62건(autoGrade **A 40 · B 22**), 공개분 중 등급 보유 61곳. 공개분 전부 카테고리 보유, **미분류 공개 0**.
 - **모바일 반응형 개선(2026-06-29) → PR #5 배포:** ① 홈 가로 스크롤 제거(`.sr-only` absolute가 캐러셀 overflow 벗어남 → `html,body{overflow-x:hidden}`+`.bakery-card{position:relative}`, 375px 스크롤 518→0). ② explore 목록 모바일 가상화(134개 전부→초기 20개+"더 보기", matchMedia 760px·데스크톱/지도핀 무영향, 66,918→10,892px). 헤드리스(gstack browse 375px) 진단·전후 검증. 상세·explore 지도뷰는 원래 정상. codex 커밋 `6a0662a`·`7f38c8e`, main은 PR #5(squash `867c512`).
 - **배포 연결 문제 해결됨:** 케이크·식사빵 등 카테고리 정상 노출 확인
 - **뺑드미 아차산점**: DB에 추가 완료 + 좌표를 카카오 검증값으로 교정 완료
@@ -39,6 +40,12 @@
 - **서울 핫플 검증(2026-06-29) — 같은 워크플로 확장, A·B 12곳 공개.** `jeju-pilot.mjs`를 **지역 파라미터화**(`--areas "연남동,성수동,한남동,망원동" --prefix seoul-hot`; `--areas` 미지정 시 제주 기본값 유지 = 하위호환). 동네별 매칭은 `region_level_3` 어간(연남/성수/한남/망원) 포함으로 필터. draft 64곳 → 무료 WebSearch 명단(동네별) → 후보 12곳 → 정밀검증 **809원**(A 8·B 4·보류 0) → 12곳 `draft→active`+카테고리+등급기록 공개. 전체 공개 108→120, 서울 핫플 1→13, draft 1093→1081, 미분류 공개 0 유지. 백업 `output/seoul-hot-save-backup-*.json`. (검증모드 콘솔 라벨은 `--areas` 미전달 시 "제주"로 표기되나 cosmetic — 파일 prefix·로직은 정상.)
 - **강남·압구정·청담 검증(2026-06-29) — 같은 워크플로, A·B 8곳 공개.** `jeju-pilot.mjs --areas "강남,압구정,청담" --region2 강남구 --prefix gangnam`. **`--region2` 구 제약 신규 추가**(이유: "강남" 키워드가 도로명 "안동 강남길"까지 매칭하는 false-positive → 강남구로 한정, 47→45). draft 45(신사/가로수길·도산 22·청담 13·기타 10) → 무료 명단 → 후보 10 → 정밀검증 **717원**(A 5·B 3·보류 2) → A·B 8곳 공개. **보류 2: 디피오리(빵집 근거 없음), 타르틴베이커리 청담점(채용사이트에만 주소·공식 지점목록 없음→영업 불확실)** — 추측 금지로 미저장. 전체 공개 120→128, 강남구 공개 16, draft 1081→1073, 미분류 공개 0. 백업 `output/gangnam-save-backup-*.json`.
 - **부산·대구·전주 검증(다구역 배치, 2026-06-29) — A 6곳 공개.** `jeju-pilot.mjs --districts "부산:해운대구,부산:부산진구,대구:중구,전북:전주시" --prefix busan-daegu-jeonju`. **`--districts "시도:구,…"` 다구역 선택자 신규 추가**(이유: 서면·동성로·한옥마을은 주소 필드에 없는 별칭이라 동네 키워드 매칭 불가 → 구 단위로 정확 선별; 서울 중구 을지로 vs 대구 중구 구분 위해 시도 부분일치 포함). draft 54(해운대구15·부산진구11[서면+전포동3]·대구중구13·전주시15) → 무료 명단 → 후보 9 → **사용자 지시로 PNB 3지점→대표 1곳(한옥마을점) 정리(후보 7)** → 정밀검증 **524원**(A 6·보류 1) → A 6곳 공개(옵스 해운대·마린시티·롯데부산·비엔씨 해운대·대구근대골목단팥빵·PNB풍년제과 한옥마을점). 퍼프베이커리 보류(근거 불충분). 전체 공개 128→134, draft 1073→1067, 미분류 공개 0. 백업 `output/busan-daegu-jeonju-save-backup-*.json`.
+- **서울 핫플 2차 검증(2026-06-30) — 마포·용산·종로·중구, A·B 19곳 공개(공개 139→158).** 4개 구 draft **168곳**(`output/seoul-hot2-draft.json`) → 무료 WebSearch 명단(홍대·서촌·익선·안국·이태원·한남·상암·효창) → 후보 **24곳** → 정밀검증(Haiku 4.5) **1,636원** → **A 12 · B 7 · 보류 5**. A·B **19곳 `draft→active`** + 카테고리 + 등급기록: 푸하하크림빵(B)·아오이토리(A)·코끼리베이글 인사동(A)·앞으로의 빵집(B)·자연도소금빵&자연도가(A)·더베이커스테이블(A)·케르반베이커리(A)·릴리언(A)·마사마드레(B)·스코프 서촌(A)·효자베이커리(A)·김용현베이커리(B)·우스블랑 본점(A)·안국153(B)·복호두 경복궁역(A)·더브래드팬트리(B)·베어글스 홍대상수(B)·옹끌르방(A)·아벡쉐리(A). 백업 `output/seoul-hot2-save-backup-2026-06-30T02-21-03-090Z.json`, draft 1067→1043, 미분류 공개 0 유지. ⚠️ **보류 5곳을 Sonnet(`VERIFY_MODEL=claude-sonnet-4-6`)으로 재검증(921원) → 메종드소시송 A · 브루티 이태원점 C · 오브너·39도스콘·데이오브베이킹 보류. 결과는 `output/seoul-hot2-recheck-verify.json`에만 있고 5곳 전부 아직 `draft`(저장 안 함)** — 남은 일(아래 "다음 할 일" 2번).
+- **지역 표시·필터 버그 수정(2026-06-30) → PR #6 배포.** 배포 사이트 점검 5건 중 **실제 버그 2건만** 수정(1~4번 중 일부는 JS 미실행 크롤러 아티팩트 → 실사용자 정상 확인). `lib/region.ts` 신규: ① `formatRegionLabel` — 세종처럼 구가 없어 `region_level_2`에 도로명이 들어온 경우 동(`region_level_3`)으로 대체, ② `matchesRegionFilter` — 토큰 단위 startsWith로 '전주'(전북특별자치도 **전주시**) 필터 누락 해결. `bakery-repository`의 표시 구성 1곳·필터 1곳을 헬퍼로 교체. 테스트 7종. 실데이터: 세종 라벨 도로명 잔존 2→0, 전주 필터 0→1, 서울·대전·부산·대구·제주 회귀 0. codex `9957a99` → main `29f2030`.
+- **카테고리별 예시 이미지(2026-06-30) → PR #7 배포.** `public/categories/*.jpg` 7장(구움과자·베이글·소금빵·식사빵·케이크·크루아상 + generic) 추가 — **Pexels License**(상업적 무료·출처표기 의무 없음), 출처·라이선스는 `public/categories/CREDITS.md`에 기록. `lib/category-image.ts`: 첫 카테고리 slug → 예시 이미지 매핑(미매칭은 generic), 순수함수 + 테스트 2. `Bakery.categoryImage` 필드 + `getPresentation` 연결. 카드/상세 이미지 자리의 이모지·"사진 준비 중"을 실제 사진 + **"예시 이미지" 캡션**으로 교체(실제 매장 사진 아님을 UI에 명시). **비용 회피 위해 정적 `img` 사용**(next/image 최적화 과금 회피). 테스트 82·타입·린트 0, 로컬 미리보기(데스크톱·모바일) 확인. codex `9ef1d8a` → main `34ffd23`.
+- **"이곳이 알려진 이유" ← 정밀검증 rationale(2026-06-30) → PR #8 배포.** `fame_evidence`가 없을 때(공개 빵집 대부분) `verification_records.normalized_value.rationale`를 폴백으로 써서 "왜 유명한지" 카드를 채움 — **정밀검증이 이미 저장해둔 근거 재활용, DB 무변경**. `lib/fame.ts`: `resolveFame`(fame 우선 → rationale → 폴백) + `extractRationale`, 순수함수 + 테스트 7. `bakery-repository`의 `verification_records` select에 `normalized_value` 추가, `mapBakery`가 `resolveFame`로 `fameReason`/`fameSource` 결정. 상세 마크업 무변경. 실데이터: 공개 A등급 빈칸 **41→1**, B등급 **22→2**(검증 60곳 신규 채움), fame 보유 시드는 기존 소개문 유지(회귀 없음). 테스트 89·타입·린트 0. codex `ab57db1` → main `4ce8431`.
+- **"꼭 먹어볼 빵"(SIGNATURE) ← 정밀검증 카테고리 근거(2026-06-30) → PR #9 배포.** `menu_items`가 없을 때 `normalized_value.categories`(대표 빵 카테고리 + 근거)를 시그니처로 노출 — 근거 텍스트에 구체 메뉴명이 들어있음. DB 무변경. `lib/signature.ts`: `extractSignatureCategories`(유효 slug + evidence 있는 것만), 테스트 3. `Bakery.signatures` + `mapBakery`가 카테고리명·이모지 매핑. 상세 SIGNATURE 섹션 **3분기**: menu_items(가격) → signatures(근거) → 빈상태("아직 정리된 대표 메뉴 정보가 없어요" + 대표 빵 종류 태그줄). 실데이터: 공개 158 = menu_items 4 + 시그니처 60 + 빈상태(태그) 94 + **빈칸 0**. 테스트 92·타입·린트 0. codex `280c5ca` → main `8ddf010`.
+- **"이곳이 알려진 이유"에 출처 칩(2026-06-30) → PR #10 배포.** 정밀검증이 인용한 매체(`normalized_value.sources`)를 **도메인 기반 매체명 칩**으로 카드에 표시, 클릭 시 원문 새 탭(`target=_blank rel=noreferrer`). DB 무변경(매핑·렌더만). `lib/fame-sources.ts`: `extractFameSources`(도메인→매체명, 공식 우선, host 중복제거), 순수함수 + 테스트 5. `FameSource` 타입 + `Bakery.fameSources`. 상세 fame 카드: 출처 있으면 칩(상위 4 + "외 N곳", **공식은 강조 배지**), 없으면 기존 "편집 근거" 줄. 실데이터: 공개 **61/158곳** 칩 생성(곳당 평균 3.7개, 출처 100% 커버). 테스트 97·타입·린트 0. codex `f581621` → main `add60a9`.
 
 ### 커밋 현황
 | 커밋 | 내용 | 원격 push |
@@ -84,14 +91,30 @@
 | `7f38c8e` | 모바일 explore 목록 가상화(초기 20 + 더 보기) | ✅ (codex) |
 | `867c512` | **PR #5 squash → `main` 배포** (모바일 반응형 2파일) | ✅ `main` |
 | `3da9fce` | 모바일 개선(PR #5) HANDOFF/WORKLOG 반영 | ✅ (codex) |
-| (이번) | `MAX_TOKENS` 1500→4000(스크립트+core lib) + `VERIFY_MODEL` env + 검증 5곳 일지 | ❌ (로컬, push 예정) |
+| `5d4e665` | `MAX_TOKENS` 1500→4000(스크립트+core lib) + `VERIFY_MODEL` env + 검증 5곳 공개(공개 139) | ✅ (codex) |
+| `117e9b0` | 일지: 다음 할 일 최신화 | ✅ (codex) |
+| `9957a99` | 지역 표시·필터 버그 수정(`lib/region.ts` 신규, 세종 도로명→동 + 전주 필터) | ✅ (codex) |
+| `29f2030` | **PR #6 squash → `main` 배포** (지역 표시·필터) | ✅ `main` |
+| `9ef1d8a` | 카테고리별 예시 이미지 7장 + `lib/category-image.ts` | ✅ (codex) |
+| `34ffd23` | **PR #7 squash → `main` 배포** (카테고리 예시 이미지) | ✅ `main` |
+| `ab57db1` | "이곳이 알려진 이유" ← 정밀검증 rationale 폴백(`lib/fame.ts`) | ✅ (codex) |
+| `4ce8431` | **PR #8 squash → `main` 배포** (fame rationale) | ✅ `main` |
+| `280c5ca` | "꼭 먹어볼 빵"(SIGNATURE) ← 정밀검증 카테고리 근거(`lib/signature.ts`) | ✅ (codex) |
+| `8ddf010` | **PR #9 squash → `main` 배포** (SIGNATURE) | ✅ `main` |
+| `f581621` | fame 카드 출처 칩(`lib/fame-sources.ts`) | ✅ (codex) |
+| `add60a9` | **PR #10 squash → `main` 배포** (출처 칩) | ✅ `main` |
+| (이번) | 일지: 2026-06-30 작업 반영(서울핫플2차 19곳 + PR #6~#10) | ❌ (로컬, push 예정) |
+
+> ⚠️ **서울 핫플 2차 검증 19곳 공개 전환은 DB 작업**이라 커밋에 안 남음(코드 변경 없음). 산출물은 `output/seoul-hot2-*.json`(gitignored).
 
 ---
 
 ## 🔄 진행 중
 
 - **자동화 5단계 + 관리자 작업대(지도 포함) 전부 완성·커밋·push 완료.**
-- **대량수집 1~11라운드 + 검증 재노출 — `bakery_locations` 1201행, 공개 139 / draft 1062 / verification_needed 1.** 전국 17개 시·도. **카테고리 미연결분은 `draft` 숨김** — 공개 139곳 전부 카테고리 보유(이름매칭 + 검증). **재노출 표준 워크플로**(제주 10 + 서울핫플 12 + 강남 8 + 부산·대구·전주 6 + 광주·대전·수원·인천 5 = **검증 41곳 공개**; `scripts/jeju-pilot.mjs` 선택자 `--areas`/`--region2`/`--districts`, `VERIFY_MODEL` env로 Sonnet 전환). **truncation 근본수정: `MAX_TOKENS` 1500→4000**(스크립트+`lib/verification-research-core.ts`) — 1500은 Sonnet에서 JSON 평결이 잘려 등급 null 떨어지던 false-negative 원인이었음(궁전제과·하레하레가 사례, 4000 후 둘 다 A). ⚠️ 수집 라운드마다 저장(active) 직후 `hide-uncategorized.mjs --confirm` 필요.
+- **대량수집 1~11라운드 + 검증 재노출 — `bakery_locations` 1201행, 공개 158 / draft 1043 / (공개분에 verification_needed 1 포함).** 전국 17개 시·도. **카테고리 미연결분은 `draft` 숨김** — 공개 158곳 전부 카테고리 보유(이름매칭 98 + 검증 60). **재노출 표준 워크플로**(제주 10 + 서울핫플 12 + 강남 8 + 부산·대구·전주 6 + 광주·대전·수원·인천 5 + 서울핫플2차 19 = **검증 60곳 공개**; `scripts/jeju-pilot.mjs` 선택자 `--areas`/`--region2`/`--districts`, `VERIFY_MODEL` env로 Sonnet 전환). **truncation 근본수정: `MAX_TOKENS` 1500→4000**(스크립트+`lib/verification-research-core.ts`) — 1500은 Sonnet에서 JSON 평결이 잘려 등급 null 떨어지던 false-negative 원인이었음(궁전제과·하레하레가 사례, 4000 후 둘 다 A). ⚠️ 수집 라운드마다 저장(active) 직후 `hide-uncategorized.mjs --confirm` 필요.
+- **정밀검증 데이터의 UI 활용 완료(2026-06-30, PR #7~#10).** 검증이 저장해둔 `rationale`·`categories`·`sources`를 각각 "이곳이 알려진 이유"·"꼭 먹어볼 빵"·출처 칩으로 노출 + 카테고리 예시 이미지. **전부 매핑/렌더만, DB 무변경.** → 검증 1회 비용(≈70원)으로 등급·카테고리·소개문·대표메뉴·출처까지 재활용하는 구조 완성.
+- **남은 것**: 서울핫플2차 보류 5곳 재검증 결과 미저장(메종드소시송 A) — 아래 "다음 할 일" 2번.
 - 미커밋: `next-env.d.ts`(자동 생성, 커밋 제외).
 
 ## 🧪 로컬 개발 DB 모드 (2026-06-26)
@@ -117,10 +140,12 @@
 
 ## ✅ 다음 할 일
 
-1. **대량 수집** — ✅ 1~11라운드 완료: 서울(1~5R)+수도권(6R)+전국 광역시(7R)+중소도시(8R)+세종·중소(9R)+5도시(10R)+제주 관광지(11R) = **`bakery_locations` 1201행**(공개 98/숨김 1103; **전국 17개 시·도 전부 커버, 제주 96곳**). 전국망 완성 → 다음 우선순위는 **수집보다 미정 카테고리 정밀검증으로 채워 재노출·등급(D→) 보완**. 추가 수집 원하면 12라운드(미커버 소도시) 가능 — `approve-and-save.mjs --approve all --confirm` 후 `hide-uncategorized.mjs --confirm`. ⚠️ stage1/2 산출물은 한 파일을 덮어쓰므로 다음 라운드 stage2 전 직전 라운드 저장 완료 확인(현재 1~11R 모두 저장 완료라 안전). 소도시는 세부 동(예: "목포 원도심"·"안동 구시가지" 0건)보다 시 단위 검색이 결과 안정적.
-2. (선택) 보류(사람확인) 건 검토 흐름, 프랜차이즈 체인 ASCII slug 매핑 확대. 정밀 검증 정확도 아쉬우면 `VERIFY_MODEL`을 Sonnet으로 교체.
-3. (배포 보안) 한때 노출됐던 Supabase secret key **rotate** 여부 확인 — 사용자 확인 필요
-- ~~검증등급 자동화~~ → **2026-06-26 완성**(위 "현재 상태" 참고). ~~중복표시 버그 수정~~ → **2026-06-26 완료**.
+1. **미정 카테고리 채워 재노출 (메인 작업)** — 숨김 **1043곳**(공개 158). 표준 워크플로: `node scripts/jeju-pilot.mjs --<선택자> --prefix <X>`(목록) → 무료 WebSearch 명단 → `output/<X>-candidates.json`에 후보 slug → `--verify --prefix <X>`(유료, 곳당 ~70원) → 보고 후 `--save --confirm --prefix <X>`(A·B만 공개). 선택자 3종: `--areas`(동)·`--region2`(단일 구)·`--districts "시도:구,…"`(다구역/별칭 지역). **MAX_TOKENS=4000 되돌리지 말 것**(1500은 JSON 잘려 false-negative). 다음 후보: 울산·창원·청주·천안 등 미검증 지방 시내, 서울 잔여 구, 전남(공개 0곳).
+2. **재검증 보류 건 마무리 (작은 일, 바로 가능)** — 서울핫플2차 보류 5곳 Sonnet 재검증 결과(`output/seoul-hot2-recheck-verify.json`)를 **저장하지 않았음**. **메종드소시송이 A인데 아직 `draft`** → `jeju-pilot.mjs --save --confirm --prefix seoul-hot2-recheck`로 공개 전환할지 결정. 브루티 이태원점 C(기준 미달), 오브너·39도스콘·데이오브베이킹 보류 유지.
+3. **대량 수집** — ✅ 1~11라운드 완료: 서울(1~5R)+수도권(6R)+전국 광역시(7R)+중소도시(8R)+세종·중소(9R)+5도시(10R)+제주 관광지(11R) = **`bakery_locations` 1201행**(**전국 17개 시·도 전부 커버, 제주 96곳**). 전국망 완성 → 다음 우선순위는 **수집보다 미정 카테고리 정밀검증으로 채워 재노출**. 추가 수집 원하면 12라운드(미커버 소도시) 가능 — `approve-and-save.mjs --approve all --confirm` 후 **반드시** `hide-uncategorized.mjs --confirm`. ⚠️ stage1/2 산출물은 한 파일을 덮어쓰므로 다음 라운드 stage2 전 직전 라운드 저장 완료 확인(현재 1~11R 모두 저장 완료라 안전). 소도시는 세부 동(예: "목포 원도심"·"안동 구시가지" 0건)보다 시 단위 검색이 결과 안정적.
+4. (선택) 프랜차이즈 체인 ASCII slug 매핑 확대. 진단만 하고 안 고친 모바일 minor(홈 검색 input 16px·탭타깃 44px).
+5. (배포 보안) 한때 노출됐던 Supabase secret key **rotate** 여부 확인 — 사용자 확인 필요
+- ~~검증등급 자동화~~ → **2026-06-26 완성**(위 "현재 상태" 참고). ~~중복표시 버그 수정~~ → **2026-06-26 완료**. ~~정밀검증 데이터 UI 활용(fame·SIGNATURE·출처칩·카테고리 이미지)~~ → **2026-06-30 완료**(PR #7~#10).
 
 ### 전체 파이프라인 그림 (5단계 전부 완성)
 ```
@@ -154,17 +179,28 @@
 | `verify-stage2-claude.mjs` | 2차: 적합성·중복·이름 판정 + 애매 건 Claude(raw fetch) 호출 | 완성·실호출 검증·커밋·push |
 | `approve-and-save.mjs` | 3차: 승인 후 DB 저장(브랜드·위치·카테고리), 플래그 3단계·idempotent | 완성·첫 저장 검증·커밋·push |
 | `hide-uncategorized.mjs` | 카테고리 미연결 location 숨김(`status='draft'`), 드라이런/`--confirm`/`--restore`·백업·idempotent | 완성·적용·push됨 |
-| `jeju-pilot.mjs` | 지역 검증 도구(목록/`--verify`/`--save`), 선택자 `--areas`(동)/`--region2`(단일구)/`--districts`(시도:구 다구역). `verification-research` 로직 포팅 | 완성·검증공개 누계 36곳·커밋 대기 |
+| `jeju-pilot.mjs` | 지역 검증 도구(목록/`--verify`/`--save`), 선택자 `--areas`(동)/`--region2`(단일구)/`--districts`(시도:구 다구역). `verification-research` 로직 포팅 | 완성·**검증공개 누계 60곳**·커밋·push됨 |
 
-### 관리자 작업대 (로컬 전용, 보기 단계)
+### 관리자 작업대 (로컬 전용, 쓰기까지 완성)
 | 파일 | 역할 | 상태 |
 |---|---|---|
-| `app/admin/workbench/page.tsx` | 작업대 페이지(가드+데이터 로드) | 완성·커밋 대기 |
-| `lib/workbench.ts` | `stage2-verified.json` 읽기(서버 fs) | 완성·커밋 대기 |
-| `components/admin-workbench.tsx` (+`.module.css`) | 상태별 카드 3구역 + 공용 카카오 지도 + 쓰기 컨트롤 3종 | 보기 커밋됨 / 쓰기 미커밋 |
-| `middleware.ts` | 배포에서 `/admin/*`·`/api/admin/*` 하드 404 차단 | 커밋됨 |
-| `lib/workbench-write.ts` | 작업대 쓰기 로직 + 원격 클라이언트(`createWorkbenchClient`, .env.remote.local) | 완성·미커밋 |
-| `app/api/admin/workbench/{approve,categories,grade}/route.ts` | 승인 저장 / 카테고리 동기화 / 수동 등급 API | 완성·미커밋 |
+| `app/admin/workbench/page.tsx` | 작업대 페이지(가드+데이터 로드) | 커밋·push됨 |
+| `lib/workbench.ts` | `stage2-verified.json` 읽기(서버 fs) + DB 상태 첨부 | 커밋·push됨 |
+| `components/admin-workbench.tsx` (+`.module.css`) | 상태별 카드 3구역 + 공용 카카오 지도 + 쓰기 컨트롤 3종 + 정밀검증 버튼 | 커밋·push됨 |
+| `middleware.ts` | 배포에서 `/admin/*`·`/api/admin/*` 하드 404 차단 | 커밋·push됨 |
+| `lib/workbench-write.ts` | 작업대 쓰기 로직 + 원격 클라이언트(`createWorkbenchClient`, .env.remote.local) | 커밋·push됨 |
+| `app/api/admin/workbench/{approve,categories,grade,verify}/route.ts` | 승인 저장 / 카테고리 동기화 / 수동 등급 / 정밀검증 API | 커밋·push됨 |
+
+> ⚠️ 작업대·자동화 스크립트는 **의도적으로 `main` 미반영**(로컬 전용). 배포에는 존재하지 않음.
+
+### 표시 로직 (정밀검증 데이터 재활용, 2026-06-30 · 전부 main 배포됨)
+| 파일 | 역할 | 테스트 |
+|---|---|---|
+| `lib/region.ts` | `formatRegionLabel`(세종 도로명→동) + `matchesRegionFilter`(전주 등 토큰 startsWith) | 7 |
+| `lib/category-image.ts` | 첫 카테고리 slug → `public/categories/*.jpg` 예시 이미지(미매칭 generic) | 2 |
+| `lib/fame.ts` | `resolveFame`: fame_evidence → 검증 `rationale` → 폴백 | 7 |
+| `lib/signature.ts` | `extractSignatureCategories`: 검증 `categories`(근거 포함) → "꼭 먹어볼 빵" | 3 |
+| `lib/fame-sources.ts` | `extractFameSources`: 검증 `sources` 도메인 → 매체명 칩(공식 우선·중복제거) | 5 |
 
 ### 데이터/설정
 | 파일 | 역할 | 비고 |
@@ -181,6 +217,41 @@
 ---
 
 ## 🗓️ 날짜별 기록
+
+### 2026-06-30
+1. **배포 사이트 점검 → 실제 버그 2건만 수정(PR #6).**
+   - 헤드리스로 production 5건 점검. **1~4번은 JS 미실행 크롤러 아티팩트**(실사용자 화면은 정상)로 판정해 손대지 않음. 실제 버그는 2건.
+   - ① **세종 지역 라벨에 도로명 노출**: 세종은 구가 없어 `region_level_2`에 도로명이 들어옴 → `formatRegionLabel`이 동(`region_level_3`)으로 대체. ② **'전주' 필터 결과 0건**: 값이 "전북특별자치도 전주시"라 단순 일치 실패 → `matchesRegionFilter`가 토큰 단위 startsWith로 매칭.
+   - `lib/region.ts` 신규 + `bakery-repository`의 표시 1곳·필터 1곳 교체. 테스트 7종. **실데이터 검증**: 세종 도로명 잔존 2→0, 전주 필터 0→1, 서울·대전·부산·대구·제주 회귀 0. `next-env.d.ts` 커밋 제외.
+   - codex `9957a99` → main PR #6(squash `29f2030`) 배포.
+2. **서울 핫플 2차 검증(마포·용산·종로·중구) — A·B 19곳 공개, 공개 139→158.**
+   - 대상: 해당 4개 구 draft **168곳**. 무료 WebSearch로 유명 빵집 명단(홍대·서촌·익선·안국·이태원·한남·상암·효창) → 후보 **24곳**(`output/seoul-hot2-candidates.json`).
+   - **정밀검증(Haiku 4.5, `--verify --prefix seoul-hot2`) 1,636원 → A 12 · B 7 · 보류 5.**
+   - **A·B 19곳 `draft→active`** + 카테고리 + 등급기록(`verification_records`, A=official·B=secondary). 백업 `output/seoul-hot2-save-backup-2026-06-30T02-21-03-090Z.json`. draft 1067→1043, 미분류 공개 0 유지.
+   - ⚠️ **보류 5곳 Sonnet 재검증(921원) → 메종드소시송 A · 브루티 이태원점 C · 오브너·39도스콘·데이오브베이킹 보류. 저장은 안 함 — 5곳 전부 아직 `draft`.** 결과는 `output/seoul-hot2-recheck-verify.json`에 있음. (남은 일: "다음 할 일" 2번)
+3. **카테고리별 예시 이미지 적용(PR #7).**
+   - `public/categories/*.jpg` 7장 추가 — **Pexels License**(상업적 무료·출처표기 의무 없음), 출처·라이선스를 `public/categories/CREDITS.md`에 기록.
+   - `lib/category-image.ts`(첫 카테고리 slug → 이미지, 미매칭 generic, 테스트 2) + `Bakery.categoryImage` → `getPresentation` 연결.
+   - 카드/상세의 이모지·"사진 준비 중"을 사진 + **"예시 이미지" 캡션**으로 교체 — **실제 매장 사진이 아님을 UI에 명시**. **비용 회피 위해 정적 `img`**(이미지 최적화 과금 회피).
+   - codex `9ef1d8a` → main PR #7(squash `34ffd23`) 배포. 테스트 82·타입·린트 0.
+4. **"이곳이 알려진 이유" 카드를 정밀검증 rationale로 채움(PR #8).**
+   - 문제: 공개 빵집 대부분이 `fame_evidence` 없어 "왜 유명한지" 카드가 비어 있었음. **정밀검증이 이미 저장해둔 `normalized_value.rationale`를 폴백으로 재활용** → DB 무변경.
+   - `lib/fame.ts`(`resolveFame`: fame 우선 → rationale → 폴백, `extractRationale`, 테스트 7). `bakery-repository`의 `verification_records` select에 `normalized_value` 추가. **상세 마크업 무변경.**
+   - 실데이터: 공개 A등급 빈칸 **41→1**, B등급 **22→2**. fame 보유 시드는 기존 소개문 유지(회귀 0).
+   - codex `ab57db1` → main PR #8(squash `4ce8431`) 배포. 테스트 89.
+5. **"꼭 먹어볼 빵"(SIGNATURE) 카드를 정밀검증 카테고리 근거로 채움(PR #9).**
+   - `menu_items`가 없을 때 `normalized_value.categories`(대표 빵 카테고리 + 근거)를 시그니처로 노출 — 근거 텍스트에 구체 메뉴명이 들어있음. DB 무변경.
+   - `lib/signature.ts`(유효 slug + evidence 있는 것만, 테스트 3) + `Bakery.signatures`(카테고리명·이모지 매핑).
+   - 상세 SIGNATURE **3분기**: menu_items(가격) → signatures(근거) → 빈상태("아직 정리된 대표 메뉴 정보가 없어요" + 대표 빵 종류 태그줄).
+   - 실데이터: 공개 158 = menu_items 4 + 시그니처 60 + 빈상태 94 + **빈칸 0**.
+   - codex `280c5ca` → main PR #9(squash `8ddf010`) 배포. 테스트 92.
+6. **"이곳이 알려진 이유" 카드에 출처 칩 노출(PR #10).**
+   - 정밀검증이 인용한 매체(`normalized_value.sources`)를 도메인 기반 **매체명 칩**으로 표시, 클릭 시 원문 새 탭(`target=_blank rel=noreferrer`). DB 무변경(매핑·렌더만).
+   - `lib/fame-sources.ts`(`extractFameSources`: 도메인→매체명, **공식 우선**, host 중복제거, 테스트 5) + `FameSource` 타입 + `Bakery.fameSources`.
+   - 표시: 상위 4개 + "외 N곳", 공식은 강조 배지. 출처 없으면 기존 "편집 근거" 줄 유지.
+   - 실데이터: 공개 **61/158곳** 칩 생성(곳당 평균 3.7개, 출처 100% 커버).
+   - codex `f581621` → main PR #10(squash `add60a9`) 배포. 테스트 97·타입·린트 0.
+7. **정리** — 06-30 코드 5건 전부 main 머지·production 배포 완료, codex 브랜치 미push 0. 검증 1회(≈70원)로 **등급·카테고리·소개문·대표메뉴·출처**까지 재활용하는 구조 완성.
 
 ### 2026-06-29
 1. **대량수집 3라운드(5개 동네) 실행 — 사용자 승인 후 끝까지 자동 진행(승인·저장까지).**
