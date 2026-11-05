@@ -5,10 +5,10 @@
 
 ---
 
-## 📌 현재 상태 (마지막 작업 2026-06-30 · 수치는 2026-09-01 원격 DB 재확인, 변동 없음)
+## 📌 현재 상태 (마지막 작업 2026-11-05 방문 기록 PR #11 · DB 수치는 2026-09-01 원격 재확인 기준)
 
 - **브랜치:** `codex/map-list-sync` (origin과 동기화, **미push 0**)
-- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨. main 반영 목록: PR #3 중복 수정 · PR #4 탐색 단일 핀 · PR #5 모바일 반응형(`867c512`, 2026-06-29) · **PR #6 지역버그(`29f2030`) · PR #7 카테고리 예시 이미지(`34ffd23`) · PR #8 fame rationale(`4ce8431`) · PR #9 SIGNATURE(`8ddf010`) · PR #10 출처 칩(`add60a9`) — 전부 2026-06-30 머지·배포 완료**.
+- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨. main 반영 목록: PR #3 중복 수정 · PR #4 탐색 단일 핀 · PR #5 모바일 반응형(`867c512`, 2026-06-29) · **PR #6 지역버그(`29f2030`) · PR #7 카테고리 예시 이미지(`34ffd23`) · PR #8 fame rationale(`4ce8431`) · PR #9 SIGNATURE(`8ddf010`) · PR #10 출처 칩(`add60a9`) — 전부 2026-06-30 머지·배포 완료** · **PR #11 내 방문 기록(`b4dca95`, 2026-11-05 머지·배포 완료)**.
 - **DB 현황(2026-06-30 원격 직접 조회):** `bakery_locations` **1201행 = 공개 158**(`active` 157 + `verification_needed` 1) **/ draft 1043**. 공개 158 = 이름매칭 카테고리 98 + **정밀검증 재공개 60**. 정밀검증 등급기록 62건(autoGrade **A 40 · B 22**), 공개분 중 등급 보유 61곳. 공개분 전부 카테고리 보유, **미분류 공개 0**.
 - **모바일 반응형 개선(2026-06-29) → PR #5 배포:** ① 홈 가로 스크롤 제거(`.sr-only` absolute가 캐러셀 overflow 벗어남 → `html,body{overflow-x:hidden}`+`.bakery-card{position:relative}`, 375px 스크롤 518→0). ② explore 목록 모바일 가상화(134개 전부→초기 20개+"더 보기", matchMedia 760px·데스크톱/지도핀 무영향, 66,918→10,892px). 헤드리스(gstack browse 375px) 진단·전후 검증. 상세·explore 지도뷰는 원래 정상. codex 커밋 `6a0662a`·`7f38c8e`, main은 PR #5(squash `867c512`).
 - **배포 연결 문제 해결됨:** 케이크·식사빵 등 카테고리 정상 노출 확인
@@ -46,6 +46,7 @@
 - **"이곳이 알려진 이유" ← 정밀검증 rationale(2026-06-30) → PR #8 배포.** `fame_evidence`가 없을 때(공개 빵집 대부분) `verification_records.normalized_value.rationale`를 폴백으로 써서 "왜 유명한지" 카드를 채움 — **정밀검증이 이미 저장해둔 근거 재활용, DB 무변경**. `lib/fame.ts`: `resolveFame`(fame 우선 → rationale → 폴백) + `extractRationale`, 순수함수 + 테스트 7. `bakery-repository`의 `verification_records` select에 `normalized_value` 추가, `mapBakery`가 `resolveFame`로 `fameReason`/`fameSource` 결정. 상세 마크업 무변경. 실데이터: 공개 A등급 빈칸 **41→1**, B등급 **22→2**(검증 60곳 신규 채움), fame 보유 시드는 기존 소개문 유지(회귀 없음). 테스트 89·타입·린트 0. codex `ab57db1` → main `4ce8431`.
 - **"꼭 먹어볼 빵"(SIGNATURE) ← 정밀검증 카테고리 근거(2026-06-30) → PR #9 배포.** `menu_items`가 없을 때 `normalized_value.categories`(대표 빵 카테고리 + 근거)를 시그니처로 노출 — 근거 텍스트에 구체 메뉴명이 들어있음. DB 무변경. `lib/signature.ts`: `extractSignatureCategories`(유효 slug + evidence 있는 것만), 테스트 3. `Bakery.signatures` + `mapBakery`가 카테고리명·이모지 매핑. 상세 SIGNATURE 섹션 **3분기**: menu_items(가격) → signatures(근거) → 빈상태("아직 정리된 대표 메뉴 정보가 없어요" + 대표 빵 종류 태그줄). 실데이터: 공개 158 = menu_items 4 + 시그니처 60 + 빈상태(태그) 94 + **빈칸 0**. 테스트 92·타입·린트 0. codex `280c5ca` → main `8ddf010`.
 - **"이곳이 알려진 이유"에 출처 칩(2026-06-30) → PR #10 배포.** 정밀검증이 인용한 매체(`normalized_value.sources`)를 **도메인 기반 매체명 칩**으로 카드에 표시, 클릭 시 원문 새 탭(`target=_blank rel=noreferrer`). DB 무변경(매핑·렌더만). `lib/fame-sources.ts`: `extractFameSources`(도메인→매체명, 공식 우선, host 중복제거), 순수함수 + 테스트 5. `FameSource` 타입 + `Bakery.fameSources`. 상세 fame 카드: 출처 있으면 칩(상위 4 + "외 N곳", **공식은 강조 배지**), 없으면 기존 "편집 근거" 줄. 실데이터: 공개 **61/158곳** 칩 생성(곳당 평균 3.7개, 출처 100% 커버). 테스트 97·타입·린트 0. codex `f581621` → main `add60a9`.
+- **"내 방문 기록"(2026-11-05) → PR #11 배포.** 공개 후기가 아니라 **나만 보는 기록**, 이 기기 localStorage(`bbang-gil.visit-log.v1`)에만 저장 — **DB·서버 무변경.** 상세 페이지 "내 방문 기록" 칸(별점 필수·방문 날짜·먹은 빵·한 줄평, 방문마다 누적·수정·삭제), `/saved` "저장한 곳 / 다녀온 곳" 탭(빵집별 묶음·비공개 빵집 흐리게·JSON 내보내기/불러오기), 목록 카드 "다녀옴 ★N". 설계는 grilling 질문 18개로 사용자와 확정(아래 날짜별 기록). 테스트 103(main)·116(codex)·타입·빌드 통과. `feat/visit-log` `1936a3e` → main `b4dca95`, codex `9f0f829`.
 
 ### 커밋 현황
 | 커밋 | 내용 | 원격 push |
@@ -103,7 +104,12 @@
 | `8ddf010` | **PR #9 squash → `main` 배포** (SIGNATURE) | ✅ `main` |
 | `f581621` | fame 카드 출처 칩(`lib/fame-sources.ts`) | ✅ (codex) |
 | `add60a9` | **PR #10 squash → `main` 배포** (출처 칩) | ✅ `main` |
-| (이번) | 일지: 2026-06-30 작업 반영(서울핫플2차 19곳 + PR #6~#10) | ❌ (로컬, push 예정) |
+| `6b9cc4c` | 일지: 2026-06-30 작업 반영(서울핫플2차 19곳 + PR #6~#10) | ✅ (codex) |
+| `8495928` | 일지: 서울핫플2차 보류 5곳 처리 종결(draft 유지가 정상) | ✅ (codex) |
+| `1936a3e` | "내 방문 기록" 추가(브랜치 `feat/visit-log`, main 기준) | ✅ (feat/visit-log) |
+| `b4dca95` | **PR #11 squash → `main` 배포** (내 방문 기록) | ✅ `main` |
+| `9f0f829` | 같은 변경을 codex에 cherry-pick | ✅ (codex) |
+| (이번) | 일지: 2026-11-05 방문 기록 반영 | ✅ (codex) |
 
 > ⚠️ **서울 핫플 2차 검증 19곳 공개 전환은 DB 작업**이라 커밋에 안 남음(코드 변경 없음). 산출물은 `output/seoul-hot2-*.json`(gitignored).
 
@@ -115,6 +121,7 @@
 - **대량수집 1~11라운드 + 검증 재노출 — `bakery_locations` 1201행, 공개 158 / draft 1043 / (공개분에 verification_needed 1 포함).** 전국 17개 시·도. **카테고리 미연결분은 `draft` 숨김** — 공개 158곳 전부 카테고리 보유(이름매칭 98 + 검증 60). **재노출 표준 워크플로**(제주 10 + 서울핫플 12 + 강남 8 + 부산·대구·전주 6 + 광주·대전·수원·인천 5 + 서울핫플2차 19 = **검증 60곳 공개**; `scripts/jeju-pilot.mjs` 선택자 `--areas`/`--region2`/`--districts`, `VERIFY_MODEL` env로 Sonnet 전환). **truncation 근본수정: `MAX_TOKENS` 1500→4000**(스크립트+`lib/verification-research-core.ts`) — 1500은 Sonnet에서 JSON 평결이 잘려 등급 null 떨어지던 false-negative 원인이었음(궁전제과·하레하레가 사례, 4000 후 둘 다 A). ⚠️ 수집 라운드마다 저장(active) 직후 `hide-uncategorized.mjs --confirm` 필요.
 - **정밀검증 데이터의 UI 활용 완료(2026-06-30, PR #7~#10).** 검증이 저장해둔 `rationale`·`categories`·`sources`를 각각 "이곳이 알려진 이유"·"꼭 먹어볼 빵"·출처 칩으로 노출 + 카테고리 예시 이미지. **전부 매핑/렌더만, DB 무변경.** → 검증 1회 비용(≈70원)으로 등급·카테고리·소개문·대표메뉴·출처까지 재활용하는 구조 완성.
 - **서울핫플2차 보류 5곳 종결(2026-09-01)**: `draft` 유지가 정상으로 확인(저장 대상 0곳). 메종드소시송만 "A인데 카테고리 근거 없음"으로 남음 — 다음 서울 라운드에 묶어 처리.
+- **내 방문 기록 1차 완료·배포(2026-11-05, PR #11).** 공개 후기 확장(카카오 로그인·신고·약관·평균 점수)은 **의도적으로 이번 범위 밖** — 모르는 방문자가 꾸준히 생기면 별도 설계.
 - 미커밋: `next-env.d.ts`(자동 생성, 커밋 제외).
 
 ## 🧪 로컬 개발 DB 모드 (2026-06-26)
@@ -145,6 +152,7 @@
 3. **대량 수집** — ✅ 1~11라운드 완료: 서울(1~5R)+수도권(6R)+전국 광역시(7R)+중소도시(8R)+세종·중소(9R)+5도시(10R)+제주 관광지(11R) = **`bakery_locations` 1201행**(**전국 17개 시·도 전부 커버, 제주 96곳**). 전국망 완성 → 다음 우선순위는 **수집보다 미정 카테고리 정밀검증으로 채워 재노출**. 추가 수집 원하면 12라운드(미커버 소도시) 가능 — `approve-and-save.mjs --approve all --confirm` 후 **반드시** `hide-uncategorized.mjs --confirm`. ⚠️ stage1/2 산출물은 한 파일을 덮어쓰므로 다음 라운드 stage2 전 직전 라운드 저장 완료 확인(현재 1~11R 모두 저장 완료라 안전). 소도시는 세부 동(예: "목포 원도심"·"안동 구시가지" 0건)보다 시 단위 검색이 결과 안정적.
 4. (선택) 프랜차이즈 체인 ASCII slug 매핑 확대. 진단만 하고 안 고친 모바일 minor(홈 검색 input 16px·탭타깃 44px).
 5. (배포 보안) 한때 노출됐던 Supabase secret key **rotate** 여부 확인 — 사용자 확인 필요
+6. (정리) `npm run lint` 오류 1건: `components/explore-workspace.tsx:85` `setListLimit` 를 effect 안에서 바로 호출(react-hooks/set-state-in-effect, PR #5 때 들어간 코드). 2026-11-05 확인, 방문 기록과 무관해 손대지 않음.
 - ~~검증등급 자동화~~ → **2026-06-26 완성**(위 "현재 상태" 참고). ~~중복표시 버그 수정~~ → **2026-06-26 완료**. ~~정밀검증 데이터 UI 활용(fame·SIGNATURE·출처칩·카테고리 이미지)~~ → **2026-06-30 완료**(PR #7~#10).
 
 ### 전체 파이프라인 그림 (5단계 전부 완성)
@@ -202,6 +210,17 @@
 | `lib/signature.ts` | `extractSignatureCategories`: 검증 `categories`(근거 포함) → "꼭 먹어볼 빵" | 3 |
 | `lib/fame-sources.ts` | `extractFameSources`: 검증 `sources` 도메인 → 매체명 칩(공식 우선·중복제거) | 5 |
 
+### 내 방문 기록 (2026-11-05 · main 배포됨, 이 기기 localStorage 전용)
+| 파일 | 역할 |
+|---|---|
+| `lib/visit-log.ts` (+`.test.ts` 19) | 순수 함수: 검증·추가·수정·삭제·빵집별 묶기·JSON 내보내기/병합 불러오기·서울 날짜 |
+| `components/visit-log-provider.tsx` | localStorage 구독(`useSyncExternalStore`) + 쓰기 동작, `app/layout.tsx`에 장착 |
+| `components/visit-log-section.tsx` · `visit-form.tsx` · `visit-stars.tsx` | 상세 페이지 "내 방문 기록" 칸(`#my-visits`) |
+| `components/saved-tabs.tsx` · `visited-bakery-list.tsx` | `/saved` 탭(`?tab=visited`)·다녀온 곳 목록·백업 버튼 |
+| `components/visited-badge.tsx` | 목록 카드 "다녀옴 ★N" |
+
+> 코드 이름은 `visit-log` — `review`는 관리자 검수(`review_actions`) 뜻이라 쓰지 않음. 지점은 id로, 이름·지역은 사본으로 저장(나중에 서버 이전 대비).
+
 ### 데이터/설정
 | 파일 | 역할 | 비고 |
 |---|---|---|
@@ -217,6 +236,18 @@
 ---
 
 ## 🗓️ 날짜별 기록
+
+### 2026-11-05
+> 09-01 이후 첫 세션. DB 쓰기 없음(코드만).
+
+1. **"리뷰 기능" 설계를 grilling 방식으로 확정(질문 18개, 사용자가 전부 추천안 승인·이해 일치 확인).**
+   - 사용자는 아직 본인·지인 위주 → **공개 후기 대신 "나만 보는 방문 기록"으로 시작**, 나중에 공개 후기로 넓힐 수 있게 데이터 형식만 맞춤. 이유: 방문자가 적으면 공개 후기 칸이 비어 보이고, 검증 안 된 후기가 "검증 등급" 신뢰와 섞임.
+   - 지점 단위 / 사진 없음(저장소·검수 필요) / 별점 1~5(필수)·한 줄평 ≤300자·먹은 빵(대표 빵·메뉴 버튼+직접 입력)·방문 날짜(오늘 기본, 미래 불가).
+   - 저장 = 이 기기 localStorage(DB·서버 무변경). 방문마다 누적·수정·삭제(확인창). 백업 = JSON 내보내기·불러오기(같은 id는 더 최근에 고친 쪽). ⚠️ 아이폰 사파리는 7일 미사용 시 사이트 저장 데이터를 지울 수 있음 — 사용자가 알고 이 방식 선택.
+   - 화면: 상세 "이곳이 알려진 이유" 아래 "내 방문 기록" 칸 / `/saved` "저장한 곳·다녀온 곳" 탭(빵집별 묶음·최근순) / 목록 카드 "다녀옴 ★N"(지도 핀 그대로) / 저장 빵집과 독립.
+   - **비공개(draft)로 바뀐 빵집의 기록은 지우지 않고 "현재 정보 비공개"로 흐리게**(기존 저장 목록은 숨긴 빵집을 말없이 빼는 구조라 같은 문제 방지).
+2. **구현 → PR #11 → main 배포.** main 기준 `feat/visit-log`에서 테스트 먼저(19개) → 구현. 로컬(휴대폰 폭·데스크톱)에서 기록·수정·미래 날짜 차단·삭제 확인·카드 표시·탭 전환 확인, 콘솔 오류 0. `next build`·Vercel 검사 통과 → 사용자가 미리보기 확인 후 머지 승인 → squash `b4dca95`, production(`/saved?tab=visited`·상세 `#my-visits`) 반영 확인. codex에 cherry-pick `9f0f829`(테스트 116 통과).
+   - 확인 못 한 것: 내보내기 버튼으로 실제 파일 내려받기·불러오기를 화면에서 직접 해 보지는 않음(로직은 단위 테스트로 확인).
 
 ### 2026-09-01
 > 06-30 이후 첫 세션(약 두 달 공백). 그 사이 코드·DB 변경 없음 — 오늘 원격 조회값이 06-30 커밋 본문 실측치와 일치.
