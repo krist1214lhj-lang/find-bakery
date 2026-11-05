@@ -1,21 +1,28 @@
 import type { Metadata } from "next";
-import { SavedBakeryList } from "@/components/saved-bakery-list";
+import { SavedTabs, type SavedTab } from "@/components/saved-tabs";
 import { getAllBakeries } from "@/lib/bakery-repository";
 
 export const metadata: Metadata = {
-  title: "저장한 빵집",
+  title: "저장·방문 기록",
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function SavedPage() {
-  const bakeries = await getAllBakeries();
+type SavedPageProps = {
+  searchParams: Promise<{ tab?: string | string[] }>;
+};
+
+export default async function SavedPage({ searchParams }: SavedPageProps) {
+  const [{ tab }, bakeries] = await Promise.all([
+    searchParams,
+    getAllBakeries(),
+  ]);
+  const initialTab: SavedTab = tab === "visited" ? "visited" : "saved";
 
   return (
     <section className="page-section">
       <span className="eyebrow">MY BREAD ROUTE</span>
-      <h1>저장한 빵집</h1>
-      <SavedBakeryList bakeries={bakeries} />
+      <SavedTabs bakeries={bakeries} initialTab={initialTab} />
     </section>
   );
 }

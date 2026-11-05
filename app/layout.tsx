@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SavedBakeriesProvider } from "@/components/saved-bakeries-provider";
+import { VisitLogProvider } from "@/components/visit-log-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,30 +21,32 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         <SavedBakeriesProvider>
-          <div className="app-shell">
-            <header className="site-header">
-              <Link className="brand" href="/" aria-label="빵길 홈">
-                <span className="brand-mark" aria-hidden="true">
-                  ㅂ
-                </span>
-                <span>
-                  <strong>빵길</strong>
-                  <small>믿고 떠나는 전국 빵집 지도</small>
-                </span>
-              </Link>
-              <nav className="desktop-nav" aria-label="주요 메뉴">
+          <VisitLogProvider>
+            <div className="app-shell">
+              <header className="site-header">
+                <Link className="brand" href="/" aria-label="빵길 홈">
+                  <span className="brand-mark" aria-hidden="true">
+                    ㅂ
+                  </span>
+                  <span>
+                    <strong>빵길</strong>
+                    <small>믿고 떠나는 전국 빵집 지도</small>
+                  </span>
+                </Link>
+                <nav className="desktop-nav" aria-label="주요 메뉴">
+                  <Link href="/">홈</Link>
+                  <Link href="/explore">탐색</Link>
+                  <Link href="/saved">저장</Link>
+                </nav>
+              </header>
+              <main>{children}</main>
+              <nav className="bottom-nav" aria-label="모바일 주요 메뉴">
                 <Link href="/">홈</Link>
                 <Link href="/explore">탐색</Link>
                 <Link href="/saved">저장</Link>
               </nav>
-            </header>
-            <main>{children}</main>
-            <nav className="bottom-nav" aria-label="모바일 주요 메뉴">
-              <Link href="/">홈</Link>
-              <Link href="/explore">탐색</Link>
-              <Link href="/saved">저장</Link>
-            </nav>
-          </div>
+            </div>
+          </VisitLogProvider>
         </SavedBakeriesProvider>
       </body>
     </html>
