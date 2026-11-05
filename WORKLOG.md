@@ -8,7 +8,7 @@
 ## 📌 현재 상태 (마지막 작업 2026-11-05 방문 기록 PR #11 · DB 수치는 2026-09-01 원격 재확인 기준)
 
 - **브랜치:** `codex/map-list-sync` (origin과 동기화, **미push 0**)
-- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨. main 반영 목록: PR #3 중복 수정 · PR #4 탐색 단일 핀 · PR #5 모바일 반응형(`867c512`, 2026-06-29) · **PR #6 지역버그(`29f2030`) · PR #7 카테고리 예시 이미지(`34ffd23`) · PR #8 fame rationale(`4ce8431`) · PR #9 SIGNATURE(`8ddf010`) · PR #10 출처 칩(`add60a9`) — 전부 2026-06-30 머지·배포 완료** · **PR #11 내 방문 기록(`b4dca95`, 2026-11-05 머지·배포 완료)**.
+- **배포:** https://find-bakery.vercel.app (Vercel), 원격 Supabase 연결 정상. **production은 `main` 기준** — 코드 변경은 main 머지(PR)해야 배포 반영됨. main 반영 목록: PR #3 중복 수정 · PR #4 탐색 단일 핀 · PR #5 모바일 반응형(`867c512`, 2026-06-29) · **PR #6 지역버그(`29f2030`) · PR #7 카테고리 예시 이미지(`34ffd23`) · PR #8 fame rationale(`4ce8431`) · PR #9 SIGNATURE(`8ddf010`) · PR #10 출처 칩(`add60a9`) — 전부 2026-06-30 머지·배포 완료** · **PR #11 내 방문 기록(`b4dca95`) · PR #12 린트 수정(`b639ec2`) — 2026-11-05 머지·배포 완료**.
 - **DB 현황(2026-06-30 원격 직접 조회):** `bakery_locations` **1201행 = 공개 158**(`active` 157 + `verification_needed` 1) **/ draft 1043**. 공개 158 = 이름매칭 카테고리 98 + **정밀검증 재공개 60**. 정밀검증 등급기록 62건(autoGrade **A 40 · B 22**), 공개분 중 등급 보유 61곳. 공개분 전부 카테고리 보유, **미분류 공개 0**.
 - **모바일 반응형 개선(2026-06-29) → PR #5 배포:** ① 홈 가로 스크롤 제거(`.sr-only` absolute가 캐러셀 overflow 벗어남 → `html,body{overflow-x:hidden}`+`.bakery-card{position:relative}`, 375px 스크롤 518→0). ② explore 목록 모바일 가상화(134개 전부→초기 20개+"더 보기", matchMedia 760px·데스크톱/지도핀 무영향, 66,918→10,892px). 헤드리스(gstack browse 375px) 진단·전후 검증. 상세·explore 지도뷰는 원래 정상. codex 커밋 `6a0662a`·`7f38c8e`, main은 PR #5(squash `867c512`).
 - **배포 연결 문제 해결됨:** 케이크·식사빵 등 카테고리 정상 노출 확인
@@ -110,9 +110,11 @@
 | `b4dca95` | **PR #11 squash → `main` 배포** (내 방문 기록) | ✅ `main` |
 | `9f0f829` | 같은 변경을 codex에 cherry-pick | ✅ (codex) |
 | `1303f92` | 일지: 2026-11-05 방문 기록 반영 | ✅ (codex) |
-| `d601817` | 탐색 모바일 "더 보기" 초기화를 effect 없이(린트 오류 수정) — **PR #12, 머지 대기** | ✅ (fix/explore-list-limit) |
+| `d601817` | 탐색 모바일 "더 보기" 초기화를 effect 없이(린트 오류 수정) | ✅ (fix/explore-list-limit) |
 | `38250bf` | 같은 수정을 codex에 cherry-pick | ✅ (codex) |
-| (이번) | 일지: 린트 수정 PR #12 반영 | ✅ (codex) |
+| `807e027` | 일지: 린트 수정 PR #12 반영(머지 대기 시점) | ✅ (codex) |
+| `b639ec2` | **PR #12 squash → `main` 배포** (린트 수정) | ✅ `main` |
+| (이번) | 일지: PR #12 머지·배포 반영 | ✅ (codex) |
 
 > ⚠️ **서울 핫플 2차 검증 19곳 공개 전환은 DB 작업**이라 커밋에 안 남음(코드 변경 없음). 산출물은 `output/seoul-hot2-*.json`(gitignored).
 
@@ -155,7 +157,7 @@
 3. **대량 수집** — ✅ 1~11라운드 완료: 서울(1~5R)+수도권(6R)+전국 광역시(7R)+중소도시(8R)+세종·중소(9R)+5도시(10R)+제주 관광지(11R) = **`bakery_locations` 1201행**(**전국 17개 시·도 전부 커버, 제주 96곳**). 전국망 완성 → 다음 우선순위는 **수집보다 미정 카테고리 정밀검증으로 채워 재노출**. 추가 수집 원하면 12라운드(미커버 소도시) 가능 — `approve-and-save.mjs --approve all --confirm` 후 **반드시** `hide-uncategorized.mjs --confirm`. ⚠️ stage1/2 산출물은 한 파일을 덮어쓰므로 다음 라운드 stage2 전 직전 라운드 저장 완료 확인(현재 1~11R 모두 저장 완료라 안전). 소도시는 세부 동(예: "목포 원도심"·"안동 구시가지" 0건)보다 시 단위 검색이 결과 안정적.
 4. (선택) 프랜차이즈 체인 ASCII slug 매핑 확대. 진단만 하고 안 고친 모바일 minor(홈 검색 input 16px·탭타깃 44px).
 5. (배포 보안) 한때 노출됐던 Supabase secret key **rotate** 여부 확인 — 사용자 확인 필요
-6. **PR #12 머지(사용자 승인 대기)** — `npm run lint` 오류 1건(`components/explore-workspace.tsx:85`, effect 안 `setListLimit`, PR #5 코드) 수정본. codex엔 반영됨(`38250bf`). 머지 후 main 해시만 이 일지에 추가.
+6. ~~린트 오류 1건(`components/explore-workspace.tsx:85`)~~ → **2026-11-05 PR #12 머지·배포 완료**(main `b639ec2`, codex `38250bf`). `npm run lint` 오류 0.
 - ~~검증등급 자동화~~ → **2026-06-26 완성**(위 "현재 상태" 참고). ~~중복표시 버그 수정~~ → **2026-06-26 완료**. ~~정밀검증 데이터 UI 활용(fame·SIGNATURE·출처칩·카테고리 이미지)~~ → **2026-06-30 완료**(PR #7~#10).
 
 ### 전체 파이프라인 그림 (5단계 전부 완성)
@@ -251,7 +253,7 @@
    - **비공개(draft)로 바뀐 빵집의 기록은 지우지 않고 "현재 정보 비공개"로 흐리게**(기존 저장 목록은 숨긴 빵집을 말없이 빼는 구조라 같은 문제 방지).
 2. **구현 → PR #11 → main 배포.** main 기준 `feat/visit-log`에서 테스트 먼저(19개) → 구현. 로컬(휴대폰 폭·데스크톱)에서 기록·수정·미래 날짜 차단·삭제 확인·카드 표시·탭 전환 확인, 콘솔 오류 0. `next build`·Vercel 검사 통과 → 사용자가 미리보기 확인 후 머지 승인 → squash `b4dca95`, production(`/saved?tab=visited`·상세 `#my-visits`) 반영 확인. codex에 cherry-pick `9f0f829`(테스트 116 통과).
    - 확인 못 한 것: 내보내기 버튼으로 실제 파일 내려받기·불러오기를 화면에서 직접 해 보지는 않음(로직은 단위 테스트로 확인).
-3. **main에 남아 있던 린트 오류 1건 수정 → PR #12(머지 대기).** `components/explore-workspace.tsx:85` — 결과가 바뀔 때 `useEffect`에서 `setListLimit(20)`(react-hooks/set-state-in-effect). "더 보기"로 늘린 개수를 **그때의 결과 목록(`visibleItems`)에 묶어** 두고, 목록이 바뀌면 렌더 시점에 바로 20으로 계산하도록 변경(effect 제거, 12줄+/5줄−). 휴대폰 폭 확인: 20→40→60, 카카오 후보 검색으로 결과 158→169 되자 `더 보기 (20/169)`로 복귀 — 예전과 동일. 린트 오류 0, 테스트 main 103·codex 116. 파일 전체에 원래 prettier 차이(줄바꿈·들여쓰기)가 있으나 변경 최소화를 위해 손대지 않음.
+3. **main에 남아 있던 린트 오류 1건 수정 → PR #12 → main 배포(`b639ec2`, 사용자 승인 후 머지, Vercel production success·주요 화면 200 확인).** `components/explore-workspace.tsx:85` — 결과가 바뀔 때 `useEffect`에서 `setListLimit(20)`(react-hooks/set-state-in-effect). "더 보기"로 늘린 개수를 **그때의 결과 목록(`visibleItems`)에 묶어** 두고, 목록이 바뀌면 렌더 시점에 바로 20으로 계산하도록 변경(effect 제거, 12줄+/5줄−). 휴대폰 폭 확인: 20→40→60, 카카오 후보 검색으로 결과 158→169 되자 `더 보기 (20/169)`로 복귀 — 예전과 동일. 린트 오류 0, 테스트 main 103·codex 116. 파일 전체에 원래 prettier 차이(줄바꿈·들여쓰기)가 있으나 변경 최소화를 위해 손대지 않음.
 
 ### 2026-09-01
 > 06-30 이후 첫 세션(약 두 달 공백). 그 사이 코드·DB 변경 없음 — 오늘 원격 조회값이 06-30 커밋 본문 실측치와 일치.
