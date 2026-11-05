@@ -48,7 +48,6 @@ export function ExploreWorkspace({
   const [capturingId, setCapturingId] = useState("");
   const [capturedIds, setCapturedIds] = useState<string[]>([]);
   const autoSearchStarted = useRef(false);
-  const [listLimit, setListLimit] = useState(MOBILE_PAGE_SIZE);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 760px)");
@@ -80,10 +79,15 @@ export function ExploreWorkspace({
     return focused ? [focused] : visibleItems;
   }, [focusedId, visibleItems, allItems]);
   // 모바일은 목록만 listLimit 까지 렌더(지도 핀은 전체 유지). 결과가 바뀌면 다시 처음부터.
+  // "더 보기"로 늘린 개수는 그때의 결과 목록에 묶어 둔다. 결과(visibleItems)가 바뀌면
+  // 묶인 목록과 달라지므로 effect로 되돌리지 않아도 바로 처음 개수로 돌아간다.
+  const [listPaging, setListPaging] = useState<{
+    items: typeof visibleItems | null;
+    limit: number;
+  }>({ items: null, limit: MOBILE_PAGE_SIZE });
+  const listLimit =
+    listPaging.items === visibleItems ? listPaging.limit : MOBILE_PAGE_SIZE;
   const listItems = isMobile ? visibleItems.slice(0, listLimit) : visibleItems;
-  useEffect(() => {
-    setListLimit(MOBILE_PAGE_SIZE);
-  }, [visibleItems]);
 
   const searchPlaces = useCallback(
     async (
@@ -361,7 +365,10 @@ export function ExploreWorkspace({
               <button
                 className="load-more"
                 onClick={() =>
-                  setListLimit((value) => value + MOBILE_PAGE_SIZE)
+                  setListPaging({
+                    items: visibleItems,
+                    limit: listLimit + MOBILE_PAGE_SIZE,
+                  })
                 }
                 type="button"
               >
