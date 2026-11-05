@@ -82,6 +82,7 @@
 
 **2026-11-05** (DB 쓰기 없음)
 - **"내 방문 기록" → PR #11로 main 배포.** 리뷰 기능 요청을 grilling(질문 18개)으로 설계 확정: 사용자가 아직 본인·지인 위주라 **공개 후기 대신 나만 보는 방문 기록**, 이 기기 localStorage(`bbang-gil.visit-log.v1`)에만 저장 — **DB·서버 무변경.** 상세 "내 방문 기록" 칸(별점 필수·방문 날짜(미래 불가)·먹은 빵 버튼+직접 입력·한 줄평 ≤300자, 방문마다 누적·수정·삭제) / `/saved` "저장한 곳·다녀온 곳" 탭(빵집별 묶음·최근순, **비공개 빵집 기록은 "현재 정보 비공개"로 흐리게 유지**, JSON 내보내기·불러오기) / 목록 카드 "다녀옴 ★N". 사진 없음. 코드 이름 `visit-log`(`review`=관리자 검수와 구분). 테스트 19 추가(main 103·codex 116), 타입·빌드·Vercel 통과, production 반영 확인. (`feat/visit-log` `1936a3e` → main `b4dca95`, codex `9f0f829`)
+- **린트 오류 수정 → PR #12(열림, 머지 대기).** main에 남아 있던 유일한 린트 오류(`explore-workspace.tsx:85`, effect 안 setState)를 "더 보기" 개수를 결과 목록에 묶는 방식으로 제거. 휴대폰 폭 확인: 20→40→60, 후보 검색으로 결과 158→169가 되자 20개로 복귀(예전과 동일). 린트 오류 0(경고는 git 밖 `output/`·`middleware.ts` `_request`뿐). (`fix/explore-list-limit` `d601817`, codex `38250bf`)
 
 ## 자동화 전체 그림 (5단계 전부 완성)
 ```
@@ -119,7 +120,7 @@
 2. ~~재검증 보류 건 마무리~~ → **2026-09-01 종결**(저장 대상 0곳이 정상, 5곳 draft 유지). 메종드소시송만 "A인데 카테고리 근거 없음"으로 남아 있으니, **다음 서울 검증 라운드 때 카테고리 근거만 같이 찾아보면 공개 가능**(~70원).
 3. **(선택) 추가 대량 수집** — 1~11R로 **전국 17개 시·도 1,201행** 수집 완료(서울~제주). 신규율 낮음. 더 모으려면 미커버 소도시 위주, `verify-stage1-kakao.mjs '[…]'` → `verify-stage2-claude.mjs` → `approve-and-save.mjs --approve all --confirm` → **반드시 `hide-uncategorized.mjs --confirm`로 미분류 숨김 재적용**(approve-and-save는 active로 저장하므로). 소도시는 세부 동보다 시 단위 검색이 안정적.
 - (선택) 보류 건 수동 등급, 프랜차이즈 체인 ASCII slug 매핑 확대. 진단했던 모바일 minor(홈 검색 input 16px·탭타깃 44px)도 여유 시.
-- (선택) `npm run lint` 오류 1건 정리: `components/explore-workspace.tsx:85` effect 안 `setListLimit`(react-hooks/set-state-in-effect, PR #5 코드). 2026-11-05 발견, 미수정.
+- **PR #12 머지 대기**: `npm run lint` 오류 1건(`components/explore-workspace.tsx:85` effect 안 `setListLimit`, react-hooks/set-state-in-effect, PR #5 코드) 수정 → "더 보기" 개수를 결과 목록에 묶어 effect 없이 초기화. 동작 동일 확인. codex에는 반영됨(`38250bf`), **main은 사용자 승인 후 머지**.
 - (나중) 방문 기록의 **공개 후기 확장**은 모르는 방문자가 꾸준히 생기면 별도 설계(카카오 로그인·고른 기록만 공개·신고·약관). 지금 데이터는 지점 id + 이름·지역 사본이라 서버로 올리기 쉬움.
 - ~~검증등급 자동화~~/~~중복표시 버그~~(2026-06-26) · ~~1라운드~~/~~카테고리 자동체크~~/~~탐색 단일핀 PR#4~~/~~2라운드~~(2026-06-27) · ~~3~11라운드 수집~~/~~미분류 숨김~~/~~검증 재노출 41곳~~/~~모바일 반응형 PR#5~~/~~MAX_TOKENS 근본수정~~ → **2026-06-29 완료**. · ~~서울핫플2차 19곳 공개~~/~~세종·전주 지역버그 PR#6~~/~~카테고리 예시 이미지 PR#7~~/~~fame rationale PR#8~~/~~SIGNATURE PR#9~~/~~출처 칩 PR#10~~ → **2026-06-30 완료**.
 
