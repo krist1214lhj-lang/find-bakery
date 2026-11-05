@@ -3,6 +3,7 @@ import type { Bakery } from "@/lib/types";
 import { formatCheckedDate, getOperatingStatus } from "@/lib/verification";
 import { SaveButton } from "./save-button";
 import { VerificationBadge } from "./verification-badge";
+import { VisitedBadge } from "./visited-badge";
 
 type BakeryCardProps = {
   bakery: Bakery;
@@ -39,6 +40,7 @@ export function BakeryCard({ bakery }: BakeryCardProps) {
           <SaveButton bakeryId={bakery.id} bakeryName={bakery.name} />
         </div>
         <p>{bakery.categories.join(" · ")}</p>
+        <VisitedBadge bakeryId={bakery.id} />
         <div className="card-status">
           <strong>{status.label}</strong>
           <span>{status.description}</span>
