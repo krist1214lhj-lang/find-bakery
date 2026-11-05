@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SaveButton } from "@/components/save-button";
 import { VerificationBadge } from "@/components/verification-badge";
+import { VisitLogSection } from "@/components/visit-log-section";
 import { getBakeryBySlug } from "@/lib/bakery-repository";
 import type { VerificationSummary } from "@/lib/types";
 import { formatCheckedDate, getOperatingStatus } from "@/lib/verification";
@@ -36,6 +37,13 @@ export default async function BakeryDetailPage({
   }
 
   const operatingStatus = getOperatingStatus(bakery);
+  // 방문 기록의 "먹은 빵" 버튼 후보: 꼭 먹어볼 빵 종류 + 등록된 메뉴 이름
+  const breadOptions = [
+    ...new Set([
+      ...bakery.signatures.map((signature) => signature.name),
+      ...bakery.menus.map((menu) => menu.name),
+    ]),
+  ];
 
   return (
     <article className="detail-page">
@@ -215,6 +223,13 @@ export default async function BakeryDetailPage({
             <small>편집 근거: {bakery.fameSource}</small>
           )}
         </section>
+
+        <VisitLogSection
+          bakeryId={bakery.id}
+          bakeryName={bakery.name}
+          bakeryRegion={bakery.region}
+          breadOptions={breadOptions}
+        />
 
         <section className="correction-panel">
           <div>
